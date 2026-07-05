@@ -321,10 +321,15 @@ async def _finalize_paid_order(order: dict) -> dict:
                     "created_at": _now_iso(),
                 })
             else:
+                # Update tree counts up the chain (display only)
+                await tree_service.update_ancestor_counts(buyer_id)
+                # Pay the DIRECT sponsor a commission for this referral
                 commission_amount = float(await _get_setting("commission_amount", 2700))
-                created_commissions = await tree_service.update_ancestor_counts_and_create_commissions(
-                    buyer_id, order["_id"], commission_amount
+                created = await tree_service.create_sponsor_commission(
+                    sponsor_id, buyer_id, order["_id"], commission_amount
                 )
+                if created:
+                    created_commissions = [created]
         else:
             # No sponsor -- treat as root
             existing_node = await tree_nodes().find_one({"_id": buyer_id})

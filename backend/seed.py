@@ -79,7 +79,7 @@ async def _create_customer(email, name, phone, sponsor_id=None, side=None, activ
 
 
 async def _place_and_activate(user_id, sponsor_id, side, order_amount, commission_amount):
-    """Create a paid order and place user in tree, generating commissions."""
+    """Create a paid order and place user in tree, generating a sponsor commission."""
     order_id = str(uuid.uuid4())
     order_num = await next_sequence("order_number")
     scooter = await scooters().find_one({})
@@ -106,7 +106,8 @@ async def _place_and_activate(user_id, sponsor_id, side, order_amount, commissio
     if sponsor_id and side:
         try:
             await tree_service.finalize_placement(user_id, sponsor_id, side)
-            await tree_service.update_ancestor_counts_and_create_commissions(user_id, order_id, commission_amount)
+            await tree_service.update_ancestor_counts(user_id)
+            await tree_service.create_sponsor_commission(sponsor_id, user_id, order_id, commission_amount)
         except Exception as e:
             print(f"[seed] placement error for {user_id}: {e}")
     else:
@@ -121,14 +122,90 @@ async def _place_and_activate(user_id, sponsor_id, side, order_amount, commissio
         })
 
 
+async def _migrate_commission_model():
+    """One-shot migration to switch from matched-pair commissions to direct-sponsor commissions.
+    Idempotent — uses a settings flag.
+    """
+    flag = await system_settings().find_one({"_id": "commission_model"})
+    if flag and flag.get("value") == "direct_sponsor":
+        return
+
+    print("[seed] Migrating commission model to direct_sponsor…")
+
+    # Drop existing unique indexes on commissions (best-effort)
+    try:
+        idxs = await commissions().index_information()
+        for name, spec in idxs.items():
+            if name == "_id_":
+                continue
+            await commissions().drop_index(name)
+    except Exception as e:
+        print(f"[seed] index drop warning: {e}")
+
+    # Clear all commissions and COMMISSION_CREDIT wallet transactions (old model artifacts)
+    await commissions().delete_many({})
+    await wallet_transactions().delete_many({"type": "COMMISSION_CREDIT"})
+
+    # Recreate index on new uniqueness key
+    await commissions().create_index(
+        [("beneficiary_user_id", 1), ("triggering_user_id", 1)],
+        unique=True,
+        name="beneficiary_triggering_unique",
+    )
+
+    # Rebuild commissions from existing PAID orders — one per direct sponsor
+    doc_cm = await system_settings().find_one({"_id": "commission_amount"})
+    commission_amount = float(doc_cm["value"]) if doc_cm else 2700.0
+
+    async for o in orders().find({"payment_status": "PAID"}):
+        buyer_id = o["buyer_user_id"]
+        buyer = await users().find_one({"_id": buyer_id})
+        if not buyer:
+            continue
+        sponsor_id = buyer.get("sponsor_user_id") or o.get("sponsor_user_id")
+        if not sponsor_id:
+            continue
+        await tree_service.create_sponsor_commission(sponsor_id, buyer_id, o["_id"], commission_amount)
+
+    # Add demo status variety: mark some as APPROVED / PAID
+    comm_docs = await commissions().find({}).to_list(1000)
+    for i, c in enumerate(comm_docs):
+        if i % 4 == 0:
+            await commissions().update_one({"_id": c["_id"]}, {"$set": {"status": "APPROVED", "approved_at": _iso(_now())}})
+        elif i % 4 == 1:
+            await commissions().update_one({"_id": c["_id"]}, {"$set": {"status": "PAID", "approved_at": _iso(_now()), "paid_at": _iso(_now())}})
+            await wallet_transactions().insert_one({
+                "_id": str(uuid.uuid4()),
+                "user_id": c["beneficiary_user_id"],
+                "type": "COMMISSION_CREDIT",
+                "amount": c["amount"],
+                "reference_type": "commission",
+                "reference_id": c["_id"],
+                "created_at": _iso(_now()),
+            })
+
+    await system_settings().update_one(
+        {"_id": "commission_model"},
+        {"$set": {"value": "direct_sponsor"}},
+        upsert=True,
+    )
+    print("[seed] Commission model migration complete.")
+
+
 async def seed_all():
     # Indexes (idempotent)
     await users().create_index("email", unique=True)
     await users().create_index("referral_code", unique=True)
     await tree_nodes().create_index([("parent_user_id", 1), ("placement_side", 1)])
+
+    # Migrate commission model BEFORE creating the new index (avoids conflict with old unique idx)
+    await _migrate_commission_model()
+
+    # Ensure the new commissions index exists (safe if already created by migration)
     await commissions().create_index(
-        [("beneficiary_user_id", 1), ("matched_pair_number", 1)],
+        [("beneficiary_user_id", 1), ("triggering_user_id", 1)],
         unique=True,
+        name="beneficiary_triggering_unique",
     )
 
     # Settings

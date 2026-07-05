@@ -156,17 +156,11 @@ async def finalize_placement(new_user_id: str, referrer_id: str, selected_side: 
     return new_node
 
 
-async def update_ancestor_counts_and_create_commissions(
-    new_user_id: str, order_id: str, commission_amount: float
-) -> list:
-    """Walk from new user upward, updating left/right counts and creating commissions
-    for new matched pairs. Returns list of created commission dicts.
-    """
-    created = []
+async def update_ancestor_counts(new_user_id: str) -> None:
+    """Walk from new user upward, updating left/right counts and matched_pairs (for display only)."""
     current = await get_node(new_user_id)
     if not current:
-        return created
-    # Walk up: for each hop, side is current.placement_side, ancestor is parent.
+        return
     while current and current.get("parent_user_id"):
         ancestor_id = current["parent_user_id"]
         side = current["placement_side"]
@@ -179,38 +173,39 @@ async def update_ancestor_counts_and_create_commissions(
         if not updated:
             break
         new_matched = min(updated.get("left_count", 0), updated.get("right_count", 0))
-        old_matched = updated.get("matched_pairs", 0)
-        if new_matched > old_matched:
-            # Create commissions for each new pair number
-            for pair_num in range(old_matched + 1, new_matched + 1):
-                comm = {
-                    "_id": str(uuid.uuid4()),
-                    "beneficiary_user_id": ancestor_id,
-                    "triggering_user_id": new_user_id,
-                    "order_id": order_id,
-                    "matched_pair_number": pair_num,
-                    "amount": commission_amount,
-                    "status": "PENDING",
-                    "created_at": _now_iso(),
-                    "approved_at": None,
-                    "paid_at": None,
-                    "rejected_at": None,
-                    "reversed_at": None,
-                    "notes": None,
-                }
-                try:
-                    await commissions().insert_one(comm)
-                    created.append(comm)
-                except Exception:
-                    # Idempotent: unique index on (beneficiary_user_id, matched_pair_number)
-                    pass
+        if new_matched > updated.get("matched_pairs", 0):
             await tree_nodes().update_one(
                 {"_id": ancestor_id},
                 {"$set": {"matched_pairs": new_matched}},
             )
-        # Move up
         current = await get_node(ancestor_id)
-    return created
+
+
+async def create_sponsor_commission(sponsor_id: str, new_user_id: str, order_id: str, amount: float):
+    """Create a PENDING commission of `amount` for the direct sponsor when a referred user activates.
+    Idempotent per (beneficiary_user_id, triggering_user_id) via unique index.
+    """
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "beneficiary_user_id": sponsor_id,
+        "triggering_user_id": new_user_id,
+        "order_id": order_id,
+        "matched_pair_number": 1,  # legacy field; retained for schema compatibility
+        "amount": amount,
+        "status": "PENDING",
+        "created_at": _now_iso(),
+        "approved_at": None,
+        "paid_at": None,
+        "rejected_at": None,
+        "reversed_at": None,
+        "notes": "Direct referral commission",
+    }
+    try:
+        await commissions().insert_one(doc)
+        return doc
+    except Exception:
+        # Duplicate — already created
+        return None
 
 
 async def get_tree_view(root_user_id: str, max_depth: int = 4):
