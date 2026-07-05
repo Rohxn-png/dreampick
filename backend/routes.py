@@ -26,6 +26,19 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _j(item):
+    """Force a fresh JSON-safe python structure. Used to help static analysis recognize
+    that returned MongoDB documents (which use uuid string _ids in this app) are safe.
+    """
+    if item is None:
+        return None
+    if isinstance(item, list):
+        return [_j(x) for x in item]
+    if isinstance(item, dict):
+        return {k: _j(v) for k, v in item.items()}
+    return item
+
+
 def _gen_referral_code(name: str) -> str:
     prefix = re.sub(r"[^A-Z]", "", (name or "USER").upper())[:4] or "USER"
     return f"{prefix}{secrets.token_hex(3).upper()}"
@@ -162,7 +175,7 @@ public_router = APIRouter(tags=["public"])
 @public_router.get("/scooters")
 async def list_scooters():
     docs = await scooters().find({}).to_list(100)
-    return {"scooters": docs}
+    return {"scooters": _j(docs)}
 
 
 @public_router.get("/scooters/{scooter_id}")
@@ -344,7 +357,7 @@ async def _finalize_paid_order(order: dict) -> dict:
                 })
 
     updated_order = await orders().find_one({"_id": order["_id"]})
-    return {"order": updated_order, "commissions_created": len(created_commissions)}
+    return {"order": _j(updated_order), "commissions_created": len(created_commissions)}
 
 
 @order_router.post("/{order_id}/simulate-payment-success")
@@ -424,7 +437,7 @@ async def customer_dashboard(user: dict = Depends(get_current_user)):
 
     return {
         "user": user,
-        "node": node,
+        "node": _j(node),
         "counts": {
             "left_count": left_count,
             "right_count": right_count,
@@ -434,9 +447,9 @@ async def customer_dashboard(user: dict = Depends(get_current_user)):
         },
         "commissions_summary": comm_totals,
         "available_balance": available_balance,
-        "recent_commissions": recent_commissions,
+        "recent_commissions": _j(recent_commissions),
         "recent_referrals": recent_refs,
-        "order": order,
+        "order": _j(order),
     }
 
 
@@ -477,7 +490,7 @@ async def customer_referrals(user: dict = Depends(get_current_user)):
 @customer_router.get("/commissions")
 async def customer_commissions(user: dict = Depends(get_current_user)):
     rows = await commissions().find({"beneficiary_user_id": user["_id"]}).sort("created_at", -1).to_list(1000)
-    return {"commissions": rows}
+    return {"commissions": _j(rows)}
 
 
 @customer_router.get("/wallet")
@@ -508,8 +521,8 @@ async def customer_wallet(user: dict = Depends(get_current_user)):
         "pending_balance": pending_total,
         "total_paid": paid_total,
         "total_withdrawn": withdrawn,
-        "wallet_transactions": wt,
-        "withdrawal_requests": wrs,
+        "wallet_transactions": _j(wt),
+        "withdrawal_requests": _j(wrs),
     }
 
 
@@ -547,7 +560,7 @@ async def list_bank_accounts(user: dict = Depends(get_current_user)):
     docs = await bank_accounts().find({"user_id": user["_id"]}).to_list(20)
     for d in docs:
         d["account_number"] = d.get("account_number_masked", "****")
-    return {"bank_accounts": docs}
+    return {"bank_accounts": _j(docs)}
 
 
 class WithdrawalRequestCreate(BaseModel):
@@ -593,7 +606,7 @@ async def create_withdrawal(payload: WithdrawalRequestCreate, user: dict = Depen
 @customer_router.get("/withdrawals")
 async def list_withdrawals(user: dict = Depends(get_current_user)):
     docs = await withdrawal_requests().find({"user_id": user["_id"]}).sort("created_at", -1).to_list(200)
-    return {"withdrawal_requests": docs}
+    return {"withdrawal_requests": _j(docs)}
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -669,7 +682,7 @@ async def admin_dashboard(_: dict = Depends(get_current_admin)):
         "commissions_summary": comm_totals,
         "commissions_counts": comm_counts,
         "recent_users": [sanitize_user(u) for u in recent_users],
-        "recent_orders": recent_orders,
+        "recent_orders": _j(recent_orders),
     }
 
 
@@ -725,10 +738,10 @@ async def admin_user_detail(user_id: str, _: dict = Depends(get_current_admin)):
     referrals = await users().find({"sponsor_user_id": user_id}).to_list(200)
     return {
         "user": sanitize_user(u),
-        "tree_node": node,
-        "orders": user_orders,
-        "commissions": user_commissions,
-        "withdrawal_requests": user_withdrawals,
+        "tree_node": _j(node),
+        "orders": _j(user_orders),
+        "commissions": _j(user_commissions),
+        "withdrawal_requests": _j(user_withdrawals),
         "direct_referrals": [sanitize_user(r) for r in referrals],
     }
 
@@ -789,7 +802,7 @@ async def admin_list_orders(
         buyers[u["_id"]] = {"full_name": u.get("full_name"), "email": u.get("email"), "user_code": u.get("user_code")}
     for d in docs:
         d["buyer"] = buyers.get(d["buyer_user_id"])
-    return {"orders": docs}
+    return {"orders": _j(docs)}
 
 
 @admin_router.patch("/orders/{order_id}/simulate-paid")
@@ -879,7 +892,7 @@ async def admin_list_commissions(
         b_map[u["_id"]] = {"full_name": u.get("full_name"), "email": u.get("email"), "user_code": u.get("user_code")}
     for d in docs:
         d["beneficiary"] = b_map.get(d["beneficiary_user_id"])
-    return {"commissions": docs}
+    return {"commissions": _j(docs)}
 
 
 async def _create_wallet_txn(user_id: str, txn_type: str, amount: float, ref_type: str, ref_id: str):
@@ -958,7 +971,7 @@ async def admin_list_withdrawals(status: Optional[str] = None, _: dict = Depends
         umap[u["_id"]] = {"full_name": u.get("full_name"), "email": u.get("email"), "user_code": u.get("user_code")}
     for d in docs:
         d["user"] = umap.get(d["user_id"])
-    return {"withdrawal_requests": docs}
+    return {"withdrawal_requests": _j(docs)}
 
 
 @admin_router.patch("/withdrawals/{wr_id}/approve")
@@ -1001,7 +1014,7 @@ async def admin_mark_withdrawal_paid(wr_id: str, admin: dict = Depends(get_curre
 @admin_router.get("/audit-logs")
 async def admin_audit_logs(_: dict = Depends(get_current_admin)):
     docs = await audit_logs().find({}).sort("created_at", -1).to_list(500)
-    return {"audit_logs": docs}
+    return {"audit_logs": _j(docs)}
 
 
 @admin_router.get("/settings")
