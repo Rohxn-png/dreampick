@@ -1,0 +1,121 @@
+{
+  "theme": "DARK",
+  "archetype": "Archetype 5 (Luxury) mixed with Technical Precision",
+  "domain": "EV / E-Commerce / Finance (MLM)",
+  "design_philosophy": "A premium, cinematic dark mode EV marketplace that seamlessly transitions into a high-density, performance-driven data dashboard for referrals and commissions. We emphasize deep navy backgrounds with electric blue and subtle green kinetic triggers.",
+  "colors": {
+    "background": {
+      "main": "#070B14",
+      "surface": "#0C1222",
+      "glass": "rgba(12, 18, 34, 0.6)"
+    },
+    "brand": {
+      "primary": "#00E5FF",
+      "secondary": "#00FFA3",
+      "accent": "#0055FF"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#94A3B8",
+      "disabled": "#475569"
+    },
+    "borders": {
+      "default": "rgba(255, 255, 255, 0.1)",
+      "active": "rgba(0, 229, 255, 0.5)"
+    },
+    "status": {
+      "success": "#00FFA3",
+      "warning": "#FFB800",
+      "danger": "#FF3B30",
+      "info": "#00E5FF"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Outfit",
+      "body": "IBM Plex Sans",
+      "mono": "JetBrains Mono"
+    },
+    "scales": {
+      "h1": "text-5xl sm:text-6xl tracking-tight font-light",
+      "h2": "text-3xl sm:text-4xl tracking-tight font-medium",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium uppercase tracking-[0.2em]",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm text-secondary",
+      "overline": "text-xs uppercase tracking-[0.2em] font-medium"
+    },
+    "rules": [
+      "Never use Inter for headings.",
+      "Headings must use tight letter spacing.",
+      "Overlines and tags must be uppercase with wide tracking."
+    ]
+  },
+  "layout_and_spacing": {
+    "general": {
+      "padding": "Generous - p-8, p-12, p-16 for marketing sections; compact (p-4, p-6) for dashboard grids.",
+      "radius": "rounded-2xl for large cards, rounded-lg for internal components, sharp edges for technical charts."
+    },
+    "marketing_pages": {
+      "grid": "Bento Grid Mode A (Tetris Grid) - grid-cols-1 md:grid-cols-12 gap-8.",
+      "hero_overlay": "bg-gradient-to-r from-[#070B14]/80 via-[#070B14]/40 to-transparent for text readability."
+    },
+    "dashboard_pages": {
+      "grid": "Control Room Grid Mode B - grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4.",
+      "cards": "Flat background (surface color), 1px subtle border, no heavy shadows. Use subgrid where possible."
+    }
+  },
+  "surface_strategies": {
+    "header": "Crystal Glass: backdrop-blur-xl bg-[#070B14]/70 border-b border-white/10.",
+    "dashboard_cards": "Flat Solid: bg-[#0C1222] border border-white/5 hover:border-white/15 transition-colors.",
+    "buttons_primary": "bg-[#00E5FF] text-[#070B14] font-medium hover:bg-[#00FFA3] transition-colors",
+    "binary_tree_nodes": "Neumorphism/Glass tile hybrid. bg-[#0C1222] border-white/20, active branches glow with border-[#00E5FF]/60 shadow-[0_0_15px_rgba(0,229,255,0.3)]."
+  },
+  "binary_tree_visualization": {
+    "design_pattern": "Interactive Auto-Positioning with Glowing Nodes.",
+    "implementation": "Use SVG lines for edges. Nodes should be flex containers. Edges glow blue (LEFT) or green (RIGHT) when active.",
+    "zoom_pan": "Implement mouse/touch drag to pan, wheel to zoom.",
+    "node_details": "Show user initials, rank, and total matched pairs on hover."
+  },
+  "component_guidelines": {
+    "marketing": "Use raw HTML + Tailwind CSS. Avoid Shadcn for landing page layout.",
+    "forms_and_dashboard": "Heavily customize Shadcn components (Tables, Inputs, Dialogs, Select).",
+    "charts": "Use Recharts or Shadcn charts. Apply dark theme gridlines (stroke: rgba(255,255,255,0.05)) and electric blue/green lines.",
+    "testing": "All interactive elements MUST have data-testid attributes (e.g., data-testid='login-submit-button')."
+  },
+  "motion_and_interaction": {
+    "hover_states": "Buttons translate-y-[-2px], cards brighten border.",
+    "transitions": "Use transition-all duration-300 ease-out.",
+    "loading": "Subtle skeleton loaders using animate-pulse with surface color."
+  },
+  "media": {
+    "image_urls": {
+      "hero_scooter": {
+        "url": "https://images.unsplash.com/photo-1623079398118-11b5da627a00?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBFViUyMHNjb290ZXIlMjBzdHVkaW8lMjBsaWdodGluZyUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4MzI0OTk2Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Modern EV scooter in studio lighting with dark background, perfect for the main product showcase."
+      },
+      "lifestyle_scooter": {
+        "url": "https://images.unsplash.com/photo-1772456595053-98eb00580bb9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjByaWRpbmclMjBlbGVjdHJpYyUyMHNjb290ZXIlMjBjaXR5JTIwbmlnaHR8ZW58MHx8fHwxNzgzMjQ5OTY2fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Person riding a scooter down a neon-lit street at night, capturing the electric, premium lifestyle vibe."
+      },
+      "secondary_scooter": {
+        "url": "https://images.unsplash.com/photo-1623079398404-4a024f3f4aee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBFViUyMHNjb290ZXIlMjBzdHVkaW8lMjBsaWdodGluZyUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4MzI0OTk2Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Scooter parked by building, used for feature section."
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5, scalable to context."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Build the application using React, Tailwind CSS, and Shadcn components.",
+    "Implement the landing page with raw HTML/Tailwind for a bespoke feel, using the provided image URLs.",
+    "For the dashboards (admin and customer), strictly use the Control Room Grid and flat surface strategies.",
+    "The binary tree visualization should be interactive with panning and zooming.",
+    "Ensure the navbar and login screens feature the 'Dream Pick' text logo with Outfit font.",
+    "Use Electric Blue (#00E5FF) for primary CTAs and Subtle Green (#00FFA3) for success/growth indicators.",
+    "Enforce dark navy (#070B14) as the global background.",
+    "Apply data-testid to every interactive element."
+  ]
+}
