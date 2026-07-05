@@ -1,0 +1,40 @@
+{
+  "summary": "Comprehensive first-iteration testing of Dream Pick MVP (FastAPI+MongoDB+React). Backend: 39/39 pytest tests PASSED covering auth (customer/admin/super-admin login, register w/ and w/o referral, /auth/me), public scooter+referral+tree-preview, full purchase+activation flow (order create -> simulate-payment-success -> user ACTIVE + placed in tree + ancestor counts incremented + commissions of ₹2700), customer routes (dashboard/tree/referrals/commissions/wallet/bank-account MASKED/withdrawal validation/profile), admin routes (dashboard KPIs, users with counts, tree, integrity-check, orders, commissions workflow incl. cannot mark REJECTED as PAID, withdrawals workflow, audit logs, settings PATCH), and commission uniqueness (no duplicate beneficiary+pair_number). Frontend: verified login role-based redirects (admin -> /admin, customer -> /dashboard), register page invalid/valid referral messaging + LEFT/RIGHT selection + placement preview card (sponsor/side/expected depth), scooter Buy Now opens Mock Checkout modal with Simulate Successful Payment/Failure buttons, customer dashboard cards (Copy Referral Link, team/earnings/recent commissions/referrals), /dashboard/tree binary visualization, /dashboard/wallet add-bank-account with masked account number persisted, admin dashboard KPI cards + charts (Total/Active/Pending Users, Paid/Failed/Refunded Orders, Sales Total ₹9,89,982, Pending Withdrawals) and Commissions-by-Status bar+donut, admin users search + view detail modal, admin orders list with Pay/Fail/Deliver/Refund actions, admin commissions/withdrawals/settings pages render + save.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin Overview", "issues": ["Recharts logs 'width(-1) height(-1)' warnings during initial mount before container is measured — cosmetic, charts render correctly after ~1s"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes.py is ~1030 lines — recommend splitting into auth/public/order/customer/admin submodules for maintainability (currently single file).",
+    "auth.set_auth_cookies uses secure=True samesite='none' which requires HTTPS; fine for preview but frontend actually relies on Bearer token in localStorage (dp_access_token). Cookie code path is effectively dormant — consider removing to reduce confusion, or fully switch to httpOnly cookies (currently a mixed model).",
+    "Customer role check in auth.get_current_active_customer permits ADMIN/SUPER_ADMIN too — misleading name; consider renaming.",
+    "seed.py's '_place_and_activate' skips creating tree_node for None-sponsor case only via insert; if seed is re-run partially it could throw duplicate _id. Idempotency is only guaranteed by the count>=15 short-circuit.",
+    "Withdrawal balance calculation in POST /customer/withdrawals subtracts pending+approved+paid withdrawals from approved commissions, but GET /customer/wallet 'available_balance' only subtracts paid+pending — slight inconsistency between the two views (wallet UI could show more available than the create endpoint accepts). Consider centralising.",
+    "commissions().aggregate result key access assumes _id present in {PENDING,APPROVED,PAID,REJECTED,REVERSED}; a stray status would KeyError. Defensive dict.setdefault would be safer.",
+    "No rate limiting or brute-force lockout on /auth/login — acceptable for demo but note for production.",
+    "Bcrypt password hash produced by bcrypt.gensalt() defaults to $2b$ — verified via login flows."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/__init__.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "superadmin@dreampick.demo / Demo@123 | admin@dreampick.demo / Demo@123 | customer1..customer16@dreampick.demo / Demo@123 | pending1..2@dreampick.demo / Demo@123",
+  "seed_data_creation": "Seed runs on backend startup via seed.seed_all(); created ~5 QA users (dpqa+*, dpqa+flow*, dpqa+root*) during test runs; also added several QA Bank accounts on customer1 and PAID a couple of commissions + a QA withdrawal request in the admin workflow tests. Non-destructive to existing seeded demo data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Full regression suite in /app/backend/tests/backend_test.py (39 tests, parallel-safe with pytest-xdist). Frontend tested via Playwright — all data-testids are present on interactive elements. Bearer token stored in localStorage key 'dp_access_token'. Backend uses cookie code path too but frontend does not — mixed auth model. Registered QA users during testing will persist in DB; safe to keep. Commission unique index is (beneficiary_user_id, matched_pair_number).",
+  "rca of the issue": "No issues to root-cause; MVP is functionally complete and stable across backend and frontend."
+}
