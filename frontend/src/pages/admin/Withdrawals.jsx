@@ -37,12 +37,12 @@ export default function AdminWithdrawals() {
       <div className="space-y-6" data-testid="admin-withdrawals-page">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="overline text-[#00E5FF]">Withdrawals</div>
+            <div className="overline text-[#F4D06F]">Withdrawals</div>
             <h1 className="font-heading text-3xl mt-1">Payout Requests ({rows.length})</h1>
           </div>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="bg-[#070B14] border-white/10 w-40" data-testid="admin-withdrawals-filter"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-[#0C1222] border-white/10 text-white">
+            <SelectTrigger className="bg-[#0F0A1F] border-white/10 w-40" data-testid="admin-withdrawals-filter"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-[#1F1836] border-white/10 text-white">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="APPROVED">Approved</SelectItem>
@@ -71,9 +71,9 @@ export default function AdminWithdrawals() {
                 <TableRow key={w._id} className="border-white/5" data-testid={`admin-wr-row-${w._id.slice(0,8)}`}>
                   <TableCell className="font-mono text-xs">{w._id.slice(0, 8)}</TableCell>
                   <TableCell>{w.user?.full_name}<div className="text-xs text-white/50">{w.user?.user_code}</div></TableCell>
-                  <TableCell className="text-[#00E5FF]">{formatINR(w.amount)}</TableCell>
+                  <TableCell className="text-[#F4D06F]">{formatINR(w.amount)}</TableCell>
                   <TableCell className="text-white/70">{w.bank_name} · {w.bank_account_masked}</TableCell>
-                  <TableCell><span className={w.status === "PAID" ? "text-[#00FFA3]" : w.status === "APPROVED" ? "text-[#00E5FF]" : w.status === "PENDING" ? "text-yellow-300" : "text-red-400"}>{w.status}</span></TableCell>
+                  <TableCell><span className={w.status === "PAID" ? "text-[#F4D06F]" : w.status === "APPROVED" ? "text-[#F4D06F]" : w.status === "PENDING" ? "text-yellow-300" : "text-red-400"}>{w.status}</span></TableCell>
                   <TableCell className="text-white/70 text-xs">{shortDate(w.created_at)}</TableCell>
                   <TableCell className="text-right space-x-1">
                     {w.status === "PENDING" && (

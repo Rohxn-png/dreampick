@@ -38,10 +38,10 @@ export default function CustomerReferrals() {
       <div className="space-y-6" data-testid="customer-referrals-page">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="overline text-[#00E5FF]">Referrals</div>
+            <div className="overline text-[#F4D06F]">Referrals</div>
             <h1 className="font-heading text-3xl mt-1">Your Team Members</h1>
           </div>
-          <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs bg-[#0C1222] border-white/10" data-testid="customer-referrals-search" />
+          <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs bg-[#1F1836] border-white/10" data-testid="customer-referrals-search" />
         </div>
 
         <div className="dp-card p-6">
@@ -65,7 +65,7 @@ export default function CustomerReferrals() {
                     <TableCell>{r.full_name}</TableCell>
                     <TableCell className="text-white/70">{r.email}</TableCell>
                     <TableCell className="text-white/70">{shortDate(r.created_at)}</TableCell>
-                    <TableCell><span className="text-[#00FFA3]">{r.status}</span></TableCell>
+                    <TableCell><span className="text-[#F4D06F]">{r.status}</span></TableCell>
                   </TableRow>
                 ))}
                 {!loading && filter(directs).length === 0 && (
@@ -95,12 +95,12 @@ export default function CustomerReferrals() {
                     <TableCell className="font-mono text-xs">{r.user_code}</TableCell>
                     <TableCell>{r.full_name}</TableCell>
                     <TableCell>
-                      <span className={r.placement_side === "LEFT" ? "text-[#00E5FF]" : "text-[#00FFA3]"}>
+                      <span className={r.placement_side === "LEFT" ? "text-[#F4D06F]" : "text-[#F4D06F]"}>
                         {r.placement_side || "-"}
                       </span>
                     </TableCell>
                     <TableCell>{r.depth ?? "-"}</TableCell>
-                    <TableCell><span className="text-[#00FFA3]">{r.status}</span></TableCell>
+                    <TableCell><span className="text-[#F4D06F]">{r.status}</span></TableCell>
                   </TableRow>
                 ))}
                 {!loading && filter(downline).length === 0 && (

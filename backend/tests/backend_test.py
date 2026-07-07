@@ -323,15 +323,19 @@ class TestMatchingIncome:
     def test_matching_income_created_for_ancestors(self, admin_token):
         """Register root -> left child -> then right child forms a pair for root."""
         root = _register("QA MatchRoot")
-        ro = _create_order(root["token"]); _admin_activate(admin_token, ro["_id"])
+        ro = _create_order(root["token"])
+        _admin_activate(admin_token, ro["_id"])
         me = requests.get(f"{API}/auth/me", headers=_headers(root["token"]), timeout=15).json()["user"]
-        root["_id"] = me["_id"]; root["referral_code"] = me["referral_code"]
+        root["_id"] = me["_id"]
+        root["referral_code"] = me["referral_code"]
 
         left = _register("QA MatchLeft", referral_code=root["referral_code"], placement_side="LEFT")
-        lo = _create_order(left["token"]); _admin_activate(admin_token, lo["_id"])
+        lo = _create_order(left["token"])
+        _admin_activate(admin_token, lo["_id"])
 
         right = _register("QA MatchRight", referral_code=root["referral_code"], placement_side="RIGHT")
-        ro2 = _create_order(right["token"]); _admin_activate(admin_token, ro2["_id"])
+        ro2 = _create_order(right["token"])
+        _admin_activate(admin_token, ro2["_id"])
 
         allc = requests.get(f"{API}/admin/commissions?commission_type=MATCHING_INCOME",
                             headers=_headers(admin_token), timeout=15).json()["commissions"]

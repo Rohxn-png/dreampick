@@ -40,15 +40,15 @@ export default function CustomerProfile() {
     <CustomerLayout>
       <div className="max-w-2xl space-y-6" data-testid="customer-profile-page">
         <div>
-          <div className="overline text-[#00E5FF]">Profile</div>
+          <div className="overline text-[#F4D06F]">Profile</div>
           <h1 className="font-heading text-3xl mt-1">Account Settings</h1>
         </div>
 
         <div className="dp-card p-6 space-y-3 text-sm">
           <div className="flex justify-between"><span className="text-white/60">User Code</span><span className="font-mono">{user?.user_code}</span></div>
           <div className="flex justify-between"><span className="text-white/60">Email</span><span>{user?.email}</span></div>
-          <div className="flex justify-between"><span className="text-white/60">Referral Code</span><span className="font-mono text-[#00E5FF]">{user?.referral_code}</span></div>
-          <div className="flex justify-between"><span className="text-white/60">Status</span><span className="text-[#00FFA3]">{user?.status}</span></div>
+          <div className="flex justify-between"><span className="text-white/60">Referral Code</span><span className="font-mono text-[#F4D06F]">{user?.referral_code}</span></div>
+          <div className="flex justify-between"><span className="text-white/60">Status</span><span className="text-[#F4D06F]">{user?.status}</span></div>
           <div className="flex justify-between"><span className="text-white/60">Created</span><span>{shortDate(user?.created_at)}</span></div>
         </div>
 
@@ -56,17 +56,17 @@ export default function CustomerProfile() {
           <div>
             <Label className="text-xs text-white/60">Full Name</Label>
             <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              className="bg-[#070B14] border-white/10 h-11 mt-1" data-testid="profile-fullname-input" />
+              className="bg-[#0F0A1F] border-white/10 h-11 mt-1" data-testid="profile-fullname-input" />
           </div>
           <div>
             <Label className="text-xs text-white/60">Phone</Label>
             <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="bg-[#070B14] border-white/10 h-11 mt-1" data-testid="profile-phone-input" />
+              className="bg-[#0F0A1F] border-white/10 h-11 mt-1" data-testid="profile-phone-input" />
           </div>
           <div>
             <Label className="text-xs text-white/60">New Password (optional)</Label>
             <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="bg-[#070B14] border-white/10 h-11 mt-1" placeholder="Leave blank to keep current" data-testid="profile-password-input" />
+              className="bg-[#0F0A1F] border-white/10 h-11 mt-1" placeholder="Leave blank to keep current" data-testid="profile-password-input" />
           </div>
           <Button type="submit" className="btn-primary w-full" disabled={saving} data-testid="profile-save-btn">
             {saving ? "Saving…" : "Save Changes"}

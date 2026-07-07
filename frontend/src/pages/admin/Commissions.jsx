@@ -47,7 +47,7 @@ export default function AdminCommissions() {
       <div className="space-y-6" data-testid="admin-commissions-page">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="overline text-[#00E5FF]">Commissions</div>
+            <div className="overline text-[#F4D06F]">Commissions</div>
             <h1 className="font-heading text-3xl mt-1">Commission Approvals ({rows.length})</h1>
           </div>
           <Button variant="ghost" className="btn-outline-dp" onClick={exportCsv} data-testid="admin-commissions-csv"><Download className="w-4 h-4 mr-2" /> CSV</Button>
@@ -55,8 +55,8 @@ export default function AdminCommissions() {
 
         <div className="dp-card p-4 flex gap-3">
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="bg-[#070B14] border-white/10 w-48" data-testid="admin-commissions-status-filter"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-[#0C1222] border-white/10 text-white">
+            <SelectTrigger className="bg-[#0F0A1F] border-white/10 w-48" data-testid="admin-commissions-status-filter"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-[#1F1836] border-white/10 text-white">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="APPROVED">Approved</SelectItem>
@@ -87,11 +87,11 @@ export default function AdminCommissions() {
                   <TableCell className="font-mono text-xs">{c._id.slice(0, 8)}</TableCell>
                   <TableCell>{c.beneficiary?.full_name || "-"}<div className="text-xs text-white/50">{c.beneficiary?.user_code}</div></TableCell>
                   <TableCell>{c.matched_pair_number}</TableCell>
-                  <TableCell className="text-[#00E5FF]">{formatINR(c.amount)}</TableCell>
+                  <TableCell className="text-[#F4D06F]">{formatINR(c.amount)}</TableCell>
                   <TableCell>
                     <span className={
-                      c.status === "PAID" ? "text-[#00FFA3]" :
-                      c.status === "APPROVED" ? "text-[#00E5FF]" :
+                      c.status === "PAID" ? "text-[#F4D06F]" :
+                      c.status === "APPROVED" ? "text-[#F4D06F]" :
                       c.status === "PENDING" ? "text-yellow-300" :
                       "text-red-400"
                     }>{c.status}</span>

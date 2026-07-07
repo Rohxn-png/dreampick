@@ -61,14 +61,14 @@ export default function CustomerWallet() {
     <CustomerLayout>
       <div className="space-y-6" data-testid="customer-wallet-page">
         <div>
-          <div className="overline text-[#00E5FF]">Wallet</div>
+          <div className="overline text-[#F4D06F]">Wallet</div>
           <h1 className="font-heading text-3xl mt-1">Balance & Withdrawals</h1>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="dp-card p-5" data-testid="wallet-available">
             <div className="overline text-white/50">Available</div>
-            <div className="font-heading text-2xl text-[#00FFA3] mt-2">{formatINR(wallet.available_balance)}</div>
+            <div className="font-heading text-2xl text-[#F4D06F] mt-2">{formatINR(wallet.available_balance)}</div>
           </div>
           <div className="dp-card p-5" data-testid="wallet-pending">
             <div className="overline text-white/50">Pending (commissions)</div>
@@ -76,7 +76,7 @@ export default function CustomerWallet() {
           </div>
           <div className="dp-card p-5" data-testid="wallet-paid">
             <div className="overline text-white/50">Total Paid</div>
-            <div className="font-heading text-2xl text-[#00E5FF] mt-2">{formatINR(wallet.total_paid)}</div>
+            <div className="font-heading text-2xl text-[#F4D06F] mt-2">{formatINR(wallet.total_paid)}</div>
           </div>
           <div className="dp-card p-5" data-testid="wallet-withdrawn">
             <div className="overline text-white/50">Withdrawn</div>
@@ -86,7 +86,7 @@ export default function CustomerWallet() {
 
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="dp-card p-6">
-            <div className="overline text-[#00E5FF] mb-3">Bank Accounts</div>
+            <div className="overline text-[#F4D06F] mb-3">Bank Accounts</div>
             {banks.length > 0 && (
               <div className="space-y-2 mb-4">
                 {banks.map(b => (
@@ -105,22 +105,22 @@ export default function CustomerWallet() {
                 <div>
                   <Label className="text-xs text-white/60">Bank Name</Label>
                   <Input required value={newBank.bank_name} onChange={(e) => setNewBank({ ...newBank, bank_name: e.target.value })}
-                    className="bg-[#070B14] border-white/10 h-10 mt-1" data-testid="bank-bank-name-input" />
+                    className="bg-[#0F0A1F] border-white/10 h-10 mt-1" data-testid="bank-bank-name-input" />
                 </div>
                 <div>
                   <Label className="text-xs text-white/60">Holder</Label>
                   <Input required value={newBank.account_holder} onChange={(e) => setNewBank({ ...newBank, account_holder: e.target.value })}
-                    className="bg-[#070B14] border-white/10 h-10 mt-1" data-testid="bank-account-holder-input" />
+                    className="bg-[#0F0A1F] border-white/10 h-10 mt-1" data-testid="bank-account-holder-input" />
                 </div>
                 <div>
                   <Label className="text-xs text-white/60">Account Number</Label>
                   <Input required value={newBank.account_number} onChange={(e) => setNewBank({ ...newBank, account_number: e.target.value })}
-                    className="bg-[#070B14] border-white/10 h-10 mt-1" data-testid="bank-account-number-input" />
+                    className="bg-[#0F0A1F] border-white/10 h-10 mt-1" data-testid="bank-account-number-input" />
                 </div>
                 <div>
                   <Label className="text-xs text-white/60">IFSC</Label>
                   <Input required value={newBank.ifsc} onChange={(e) => setNewBank({ ...newBank, ifsc: e.target.value })}
-                    className="bg-[#070B14] border-white/10 h-10 mt-1" data-testid="bank-ifsc-input" />
+                    className="bg-[#0F0A1F] border-white/10 h-10 mt-1" data-testid="bank-ifsc-input" />
                 </div>
               </div>
               <Button type="submit" className="btn-primary w-full" data-testid="bank-add-btn">Add Bank Account</Button>
@@ -129,20 +129,20 @@ export default function CustomerWallet() {
           </div>
 
           <div className="dp-card p-6">
-            <div className="overline text-[#00FFA3] mb-3">Request Withdrawal</div>
+            <div className="overline text-[#F4D06F] mb-3">Request Withdrawal</div>
             <form onSubmit={requestWithdrawal} className="space-y-3">
               <div>
                 <Label className="text-xs text-white/60">Amount</Label>
                 <Input required type="number" step="0.01" min="1" value={amount} onChange={(e) => setAmount(e.target.value)}
-                  className="bg-[#070B14] border-white/10 h-10 mt-1" placeholder="₹" data-testid="withdrawal-amount-input" />
+                  className="bg-[#0F0A1F] border-white/10 h-10 mt-1" placeholder="₹" data-testid="withdrawal-amount-input" />
               </div>
               <div>
                 <Label className="text-xs text-white/60">Bank Account</Label>
                 <Select value={bankId} onValueChange={setBankId}>
-                  <SelectTrigger className="bg-[#070B14] border-white/10 mt-1" data-testid="withdrawal-bank-select">
+                  <SelectTrigger className="bg-[#0F0A1F] border-white/10 mt-1" data-testid="withdrawal-bank-select">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#0C1222] border-white/10 text-white">
+                  <SelectContent className="bg-[#1F1836] border-white/10 text-white">
                     {banks.map(b => (
                       <SelectItem key={b._id} value={b._id}>{b.bank_name} · {b.account_number}</SelectItem>
                     ))}
@@ -175,7 +175,7 @@ export default function CustomerWallet() {
                   <TableCell className="font-mono text-xs">{w._id.slice(0, 8)}</TableCell>
                   <TableCell>{formatINR(w.amount)}</TableCell>
                   <TableCell className="text-white/70">{w.bank_name} · {w.bank_account_masked}</TableCell>
-                  <TableCell><span className="text-[#00E5FF]">{w.status}</span></TableCell>
+                  <TableCell><span className="text-[#F4D06F]">{w.status}</span></TableCell>
                   <TableCell>{shortDate(w.created_at)}</TableCell>
                 </TableRow>
               ))}

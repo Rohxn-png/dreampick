@@ -20,7 +20,7 @@ export default function AdminAuditLogs() {
     <AdminLayout>
       <div className="space-y-6" data-testid="admin-audit-page">
         <div>
-          <div className="overline text-[#00E5FF]">Audit Logs</div>
+          <div className="overline text-[#F4D06F]">Audit Logs</div>
           <h1 className="font-heading text-3xl mt-1">Admin Activity ({rows.length})</h1>
         </div>
         <div className="dp-card p-6 overflow-x-auto">
@@ -40,7 +40,7 @@ export default function AdminAuditLogs() {
                 <TableRow key={r._id} className="border-white/5" data-testid={`audit-row-${r._id.slice(0,8)}`}>
                   <TableCell className="text-xs text-white/70">{shortDate(r.created_at)}</TableCell>
                   <TableCell className="text-white/80 text-xs">{r.admin_email}</TableCell>
-                  <TableCell><span className="text-[#00E5FF]">{r.action}</span></TableCell>
+                  <TableCell><span className="text-[#F4D06F]">{r.action}</span></TableCell>
                   <TableCell className="text-white/70">{r.target_type} · <span className="font-mono text-xs">{(r.target_id || "").slice(0, 8)}</span></TableCell>
                   <TableCell className="text-xs text-white/50 font-mono">{JSON.stringify(r.details).slice(0, 60)}</TableCell>
                 </TableRow>

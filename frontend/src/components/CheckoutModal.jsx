@@ -30,7 +30,7 @@ export function CheckoutModal({ open, onClose, order, onPaid }) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
-      <DialogContent className="bg-[#0C1222] border-white/10 text-white sm:max-w-md" data-testid="checkout-modal">
+      <DialogContent className="bg-[#1F1836] border-white/10 text-white sm:max-w-md" data-testid="checkout-modal">
         <DialogHeader>
           <DialogTitle className="brand-logo text-xl">Mock Checkout</DialogTitle>
           <p className="text-xs text-white/50 mt-1">Demo mode — no real payment will be charged.</p>
@@ -48,7 +48,7 @@ export function CheckoutModal({ open, onClose, order, onPaid }) {
               </div>
               <div className="flex justify-between text-lg pt-2 border-t border-white/10">
                 <span className="text-white/60">Total</span>
-                <span className="text-[#00E5FF] font-medium" data-testid="checkout-amount">{formatINR(order.amount)}</span>
+                <span className="text-[#F4D06F] font-medium" data-testid="checkout-amount">{formatINR(order.amount)}</span>
               </div>
             </div>
             <p className="text-xs text-white/50">

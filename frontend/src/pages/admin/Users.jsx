@@ -60,7 +60,7 @@ export default function AdminUsers() {
       <div className="space-y-6" data-testid="admin-users-page">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="overline text-[#00E5FF]">Users</div>
+            <div className="overline text-[#F4D06F]">Users</div>
             <h1 className="font-heading text-3xl mt-1">Members ({users.length})</h1>
           </div>
         </div>
@@ -71,14 +71,14 @@ export default function AdminUsers() {
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-3 text-white/40" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
-                placeholder="Name, email, phone, user code, referral…" className="pl-9 bg-[#070B14] border-white/10" data-testid="admin-users-search" />
+                placeholder="Name, email, phone, user code, referral…" className="pl-9 bg-[#0F0A1F] border-white/10" data-testid="admin-users-search" />
             </div>
           </div>
           <div>
             <div className="overline text-white/50 mb-1">Status</div>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="bg-[#070B14] border-white/10 w-40" data-testid="admin-users-status-filter"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-[#0C1222] border-white/10 text-white">
+              <SelectTrigger className="bg-[#0F0A1F] border-white/10 w-40" data-testid="admin-users-status-filter"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-[#1F1836] border-white/10 text-white">
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
@@ -89,8 +89,8 @@ export default function AdminUsers() {
           <div>
             <div className="overline text-white/50 mb-1">Role</div>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="bg-[#070B14] border-white/10 w-40" data-testid="admin-users-role-filter"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-[#0C1222] border-white/10 text-white">
+              <SelectTrigger className="bg-[#0F0A1F] border-white/10 w-40" data-testid="admin-users-role-filter"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-[#1F1836] border-white/10 text-white">
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="CUSTOMER">Customer</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
@@ -123,8 +123,8 @@ export default function AdminUsers() {
                   <TableCell className="font-mono text-xs">{u.user_code}</TableCell>
                   <TableCell>{u.full_name}</TableCell>
                   <TableCell className="text-white/70">{u.email}</TableCell>
-                  <TableCell><span className="text-[#00E5FF]">{u.role}</span></TableCell>
-                  <TableCell><span className={u.status === "ACTIVE" ? "text-[#00FFA3]" : u.status === "PENDING" ? "text-yellow-300" : "text-red-400"}>{u.status}</span></TableCell>
+                  <TableCell><span className="text-[#F4D06F]">{u.role}</span></TableCell>
+                  <TableCell><span className={u.status === "ACTIVE" ? "text-[#F4D06F]" : u.status === "PENDING" ? "text-yellow-300" : "text-red-400"}>{u.status}</span></TableCell>
                   <TableCell className="font-mono">{u.left_count}/{u.right_count}</TableCell>
                   <TableCell>{u.matched_pairs}</TableCell>
                   <TableCell className="text-white/70">{shortDate(u.created_at)}</TableCell>
@@ -142,7 +142,7 @@ export default function AdminUsers() {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="bg-[#0C1222] border-white/10 text-white max-w-3xl max-h-[85vh] overflow-y-auto" data-testid="admin-user-detail-modal">
+        <DialogContent className="bg-[#1F1836] border-white/10 text-white max-w-3xl max-h-[85vh] overflow-y-auto" data-testid="admin-user-detail-modal">
           <DialogHeader>
             <DialogTitle className="font-heading">
               {selected?.full_name} <span className="text-white/50 text-sm font-mono">({selected?.user_code})</span>
@@ -153,7 +153,7 @@ export default function AdminUsers() {
               <div className="grid grid-cols-2 gap-4">
                 <div>Email: <span className="text-white/70">{detail.user.email}</span></div>
                 <div>Phone: <span className="text-white/70">{detail.user.phone}</span></div>
-                <div>Status: <span className="text-[#00FFA3]">{detail.user.status}</span></div>
+                <div>Status: <span className="text-[#F4D06F]">{detail.user.status}</span></div>
                 <div>Referral: <span className="font-mono">{detail.user.referral_code}</span></div>
                 <div>Left Count: {detail.tree_node?.left_count ?? "-"}</div>
                 <div>Right Count: {detail.tree_node?.right_count ?? "-"}</div>

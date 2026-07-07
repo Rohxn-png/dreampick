@@ -108,14 +108,14 @@ async def seed_all():
         "gross_percent": 5,
         "admin_charge_percent": 10,
         "status": "active",
-        "rounding_mode": "two_decimals",
+        "rounding_mode": "nearest_rupee",
     }
     matching_cfg = {
         "plan_price": 54999,
         "gross_percent": 2.5,
         "admin_charge_percent": 10,
         "status": "active",
-        "rounding_mode": "two_decimals",
+        "rounding_mode": "round_down",
     }
     await system_settings().update_one({"_id": "cashback_config"}, {"$set": {"value": cashback_cfg}}, upsert=True)
     await system_settings().update_one({"_id": "direct_referral_config"}, {"$set": {"value": direct_cfg}}, upsert=True)

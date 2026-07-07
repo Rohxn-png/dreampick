@@ -25,7 +25,7 @@ export default function CustomerTree() {
     <CustomerLayout>
       <div className="space-y-6" data-testid="customer-tree-page">
         <div>
-          <div className="overline text-[#00E5FF]">Binary Tree</div>
+          <div className="overline text-[#F4D06F]">Binary Tree</div>
           <h1 className="font-heading text-3xl mt-1">My Team</h1>
           <p className="text-white/60 text-sm mt-1">Interactive view of your team — scroll and click nodes to explore.</p>
         </div>

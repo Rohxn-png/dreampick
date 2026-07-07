@@ -46,20 +46,20 @@ export default function AdminTree() {
     <AdminLayout>
       <div className="space-y-6" data-testid="admin-tree-page">
         <div>
-          <div className="overline text-[#00E5FF]">Tree Explorer</div>
+          <div className="overline text-[#F4D06F]">Tree Explorer</div>
           <h1 className="font-heading text-3xl mt-1">Binary Tree</h1>
         </div>
         <div className="dp-card p-4 flex flex-wrap gap-3">
           <Input placeholder="Search by user code (e.g., DP00003)" value={userCode} onChange={(e) => setUserCode(e.target.value)}
-            className="max-w-xs bg-[#070B14] border-white/10" data-testid="admin-tree-search-input" />
+            className="max-w-xs bg-[#0F0A1F] border-white/10" data-testid="admin-tree-search-input" />
           <Button className="btn-primary" onClick={searchByCode} data-testid="admin-tree-search-btn">Search</Button>
           <Button variant="ghost" className="btn-outline-dp" onClick={() => { setUserCode(""); load(); }} data-testid="admin-tree-reset-btn">Reset to root</Button>
           <Button variant="ghost" className="btn-outline-dp ml-auto" onClick={runIntegrity} data-testid="admin-tree-integrity-btn">Run Integrity Check</Button>
         </div>
 
         {integrity && (
-          <div className={`dp-card p-4 flex gap-3 items-start ${integrity.ok ? "border-[#00FFA3]/30" : "border-yellow-400/30"}`} data-testid="admin-integrity-result">
-            {integrity.ok ? <CheckCircle2 className="w-5 h-5 text-[#00FFA3]" /> : <AlertCircle className="w-5 h-5 text-yellow-400" />}
+          <div className={`dp-card p-4 flex gap-3 items-start ${integrity.ok ? "border-[#F4D06F]/30" : "border-yellow-400/30"}`} data-testid="admin-integrity-result">
+            {integrity.ok ? <CheckCircle2 className="w-5 h-5 text-[#F4D06F]" /> : <AlertCircle className="w-5 h-5 text-yellow-400" />}
             <div>
               <div className="font-heading">{integrity.ok ? "Tree healthy" : `Found ${integrity.issues.length} issues`}</div>
               {!integrity.ok && (

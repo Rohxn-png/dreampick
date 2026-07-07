@@ -8,8 +8,8 @@ import { toast } from "sonner";
 
 const STATUS_COLORS = {
   PENDING: "text-yellow-300",
-  APPROVED: "text-[#00E5FF]",
-  PAID: "text-[#00FFA3]",
+  APPROVED: "text-[#F4D06F]",
+  PAID: "text-[#F4D06F]",
   REJECTED: "text-red-400",
   REVERSED: "text-white/60",
 };
@@ -52,7 +52,7 @@ export default function CustomerCommissions() {
       <div className="space-y-6" data-testid="customer-commissions-page">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="overline text-[#00E5FF]">Commissions</div>
+            <div className="overline text-[#F4D06F]">Commissions</div>
             <h1 className="font-heading text-3xl mt-1">Earnings History</h1>
           </div>
           <Button variant="ghost" className="btn-outline-dp" onClick={exportCsv} data-testid="commissions-export-csv-btn">
@@ -89,7 +89,7 @@ export default function CustomerCommissions() {
                   <TableRow key={r._id} className="border-white/5" data-testid={`commission-row-${r._id}`}>
                     <TableCell className="font-mono text-xs">{r._id.slice(0, 8)}</TableCell>
                     <TableCell>{r.matched_pair_number}</TableCell>
-                    <TableCell className="text-[#00E5FF]">{formatINR(r.amount)}</TableCell>
+                    <TableCell className="text-[#F4D06F]">{formatINR(r.amount)}</TableCell>
                     <TableCell><span className={STATUS_COLORS[r.status]}>{r.status}</span></TableCell>
                     <TableCell>{shortDate(r.created_at)}</TableCell>
                     <TableCell>{shortDate(r.approved_at)}</TableCell>

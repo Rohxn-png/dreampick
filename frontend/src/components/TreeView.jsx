@@ -58,7 +58,7 @@ export function TreeView({ tree, onNodeClick }) {
         <div className="mt-1 flex items-center gap-2 text-[10px] text-white/50">
           <span>L: {n.left_count}</span>
           <span>R: {n.right_count}</span>
-          <span className="text-[#00E5FF]">MP: {n.matched_pairs}</span>
+          <span className="text-[#F4D06F]">MP: {n.matched_pairs}</span>
         </div>
       </button>
     );
@@ -74,8 +74,8 @@ export function TreeView({ tree, onNodeClick }) {
         ))}
       </div>
       <div className="mt-6 flex gap-6 justify-center text-xs text-white/60">
-        <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#00E5FF]"></span> Left branch</div>
-        <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#00FFA3]"></span> Right branch</div>
+        <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#F4D06F]"></span> Left branch</div>
+        <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#F4D06F]"></span> Right branch</div>
         <div className="flex items-center gap-2"><span className="w-3 h-3 border border-dashed border-white/30"></span> Empty slot</div>
       </div>
     </div>

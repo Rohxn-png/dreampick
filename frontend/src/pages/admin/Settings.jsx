@@ -13,9 +13,14 @@ function ConfigSection({ title, config, onChange, testId, extra }) {
   const gross = parseFloat(config.gross_percent ?? config.gross_monthly ?? 0);
   const price = parseFloat(config.plan_price || 54999);
   const adminPct = parseFloat(config.admin_charge_percent || 0);
-  const grossAmt = config.gross_monthly ? gross : (price * gross / 100);
-  const dedAmt = grossAmt * adminPct / 100;
-  const netAmt = grossAmt - dedAmt;
+  let grossAmt = config.gross_monthly ? gross : (price * gross / 100);
+  const mode = config.rounding_mode || "two_decimals";
+  if (mode === "nearest_rupee") grossAmt = Math.round(grossAmt);
+  else if (mode === "round_down") grossAmt = Math.floor(grossAmt);
+  else if (mode === "round_up") grossAmt = Math.ceil(grossAmt);
+  else grossAmt = Math.round(grossAmt * 100) / 100;
+  const dedAmt = Math.round(grossAmt * adminPct) / 100;
+  const netAmt = Math.round((grossAmt - dedAmt) * 100) / 100;
   return (
     <div className="dp-card p-6 space-y-3" data-testid={testId}>
       <div className="flex justify-between items-start">

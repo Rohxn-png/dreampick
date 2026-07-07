@@ -55,7 +55,7 @@ export default function ScooterDetails() {
 
   if (!scooter) {
     return (
-      <div className="min-h-screen bg-[#070B14] text-white">
+      <div className="min-h-screen bg-[#0F0A1F] text-white">
         <PublicNav />
         <div className="max-w-3xl mx-auto p-10 text-white/50">Loading scooter…</div>
       </div>
@@ -72,7 +72,7 @@ export default function ScooterDetails() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white">
+    <div className="min-h-screen bg-[#0F0A1F] text-white">
       <PublicNav />
       <section className="hero-gradient">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12 grid lg:grid-cols-12 gap-10">
@@ -81,14 +81,14 @@ export default function ScooterDetails() {
           </div>
           <div className="lg:col-span-6 space-y-6">
             <div>
-              <div className="overline text-[#00E5FF] mb-2">Flagship Model</div>
+              <div className="overline text-[#F4D06F] mb-2">Flagship Model</div>
               <h1 className="font-heading text-5xl tracking-tight" data-testid="scooter-name">{scooter.name}</h1>
               <p className="mt-3 text-white/70 leading-relaxed" data-testid="scooter-desc">{scooter.description}</p>
             </div>
             <div className="flex items-end gap-4 border-t border-white/10 pt-6">
               <div>
                 <div className="overline text-white/50">Price</div>
-                <div className="font-heading text-5xl text-[#00E5FF]" data-testid="scooter-price">{formatINR(scooter.price)}</div>
+                <div className="font-heading text-5xl text-[#F4D06F]" data-testid="scooter-price">{formatINR(scooter.price)}</div>
               </div>
               <div className="text-xs text-white/50 pb-2">Includes registration in Dream Pick binary program</div>
             </div>
@@ -102,8 +102,8 @@ export default function ScooterDetails() {
                 </Button>
               )}
             </div>
-            <div className="p-4 bg-[#00E5FF]/5 border border-[#00E5FF]/20 rounded-xl text-xs text-white/70 flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
+            <div className="p-4 bg-[#F4D06F]/5 border border-[#F4D06F]/20 rounded-xl text-xs text-white/70 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-[#F4D06F] shrink-0 mt-0.5" />
               <span>This is a demo. Clicking Buy Now creates a mock order — no real payment is processed.</span>
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function ScooterDetails() {
           <div className="grid md:grid-cols-3 gap-4">
             {specs.map((s, i) => (
               <div key={i} className="dp-card p-6" data-testid={`scooter-spec-${i}`}>
-                <s.icon className="w-6 h-6 text-[#00E5FF] mb-3" strokeWidth={1.5} />
+                <s.icon className="w-6 h-6 text-[#F4D06F] mb-3" strokeWidth={1.5} />
                 <div className="overline text-white/50">{s.label}</div>
                 <div className="mt-1 font-heading text-xl">{s.value}</div>
               </div>

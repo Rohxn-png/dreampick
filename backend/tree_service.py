@@ -195,8 +195,8 @@ async def update_ancestor_counts_and_create_matching(new_user_id: str, order_id:
                 rounding = cfg.get("rounding_mode", "two_decimals")
                 for pair_num in range(old_matched + 1, new_matched + 1):
                     gross = _round_amount(plan_price * gross_pct / 100.0, rounding)
-                    deduction = _round_amount(gross * admin_pct / 100.0, rounding)
-                    net = _round_amount(gross - deduction, rounding)
+                    deduction = _round_amount(gross * admin_pct / 100.0, "two_decimals")
+                    net = _round_amount(gross - deduction, "two_decimals")
                     doc = {
                         "_id": str(uuid.uuid4()),
                         "commission_type": "MATCHING_INCOME",
@@ -246,8 +246,8 @@ async def create_direct_referral_commission(sponsor_id: str, new_user_id: str, o
     admin_pct = float(cfg.get("admin_charge_percent", 10))
     rounding = cfg.get("rounding_mode", "two_decimals")
     gross = _round_amount(plan_price * gross_pct / 100.0, rounding)
-    deduction = _round_amount(gross * admin_pct / 100.0, rounding)
-    net = _round_amount(gross - deduction, rounding)
+    deduction = _round_amount(gross * admin_pct / 100.0, "two_decimals")
+    net = _round_amount(gross - deduction, "two_decimals")
     doc = {
         "_id": str(uuid.uuid4()),
         "commission_type": "DIRECT_REFERRAL",
