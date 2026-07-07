@@ -1,0 +1,48 @@
+{
+  "summary": "Full regression testing of Dreampick v4 (new admin credentials, category-based media, Chief Guests section replacing Managers, smooth-scroll navbar). Backend: 20/20 pytest tests PASSED including new admin login, old admin rejection, invalid category rejection, single-slot auto-replace + file deletion, multi-slot gallery, cross-category leakage prevention, and end-to-end media delete removing both doc and underlying file. Frontend: Home page renders correctly with 4 chief guests in order (Mr Fazi, Vishal Meharvade, Srinivas, Hemanth Kumar) with matching designations, no Managers found, all four DOM anchors (#about-us, #gallery, #chief-guests, #leadership) present, desktop AND mobile navbar Gallery/About Us buttons smooth-scroll and update URL, mobile drawer closes after tap. Uploading COMPANY_LOGO from /admin/media replaces the 'D' placeholder in the navbar and returns to placeholder after delete. Uploading HERO_SCOOTER swaps the hero placeholder. Uploading CHIEF_GUEST_MR_FAZI shows an image ONLY on Fazi's card (other 3 remain placeholders). Uploading GALLERY_IMAGE populates the home gallery slider. Register page has NO demo notice and NO Try Demo buttons. All 10 slot cards present on /admin/media with 10 file inputs and 'No media uploaded' empty-state.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/admin/dashboard (direct_referral_totals PAID)",
+        "issue": "Still reads ₹2,474.95 (from v3 rounding bug where 54999*0.05 becomes 2749.95). Spec expects ₹2,475 direct-referral net. Same root-cause as iteration_2 — commission gross rounding for existing pre-v4 activations unchanged. Not part of v4 scope but visible in the admin overview screen."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Home /about-us section",
+        "issues": ["Telugu translation lines below Vision/Mission render with visible whitespace gaps between characters (font-rendering artefact — either use a Telugu-capable webfont or reduce letter-spacing)"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Carry-over from iteration_2) Fix commission gross rounding so direct-referral net = ₹2,475 and matching = ₹1,236.60 in DB. Otherwise Admin overview keeps showing ₹2,474.95.",
+    "(Optional cosmetic) Fix Telugu font rendering in Vision/Mission blocks on Home /#about-us section — currently the Kannada/Telugu characters have visual spacing gaps."
+  ],
+  "critical_code_review_comments": [
+    "routes.py is 1266 lines — split into auth/public/order/customer/admin/media modules.",
+    "PublicNav.jsx uses React.useState instead of importing useState (mixed imports at line 12) — cosmetic; works but inconsistent.",
+    "Home.jsx does sequential await inside a for-loop for CHIEF_GUESTS (4 x api.get) while other fetches use Promise.all — parallelise for faster paint.",
+    "admin/media/upload single-slot delete uses async for + delete_many after deleting files; safer to fetch list first, then delete files, then delete_many (currently async-for over cursor + delete-many can race with the same call).",
+    "media_serve_router.serve_media does not validate that 'filename' is within UPLOAD_DIR (path traversal potential via '..'). Use os.path.commonpath or restrict filename regex.",
+    "Media upload accepts up to 25 MB but does not stream — reads entire content into memory (await file.read()) before size check; large uploads inflate RAM before rejection."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100% (all v4 flows pass)"},
+  "test_credentials": "Admin: dreampickev@gmail.com / dreampick@123 (verified). Old admin admin@dreampick.co.in / Admin@Dreampick2026 correctly returns 401.",
+  "seed_data_creation": "Created ~7 TEST_* customers during pytest runs (register + activate). Uploaded and deleted test media into COMPANY_LOGO/HERO_SCOOTER/CHIEF_GUEST_MR_FAZI/GALLERY_IMAGE/ABOUT_US. All uploads for single-slot categories were auto-cleaned. Manual navbar-logo upload from playwright was deleted at end of run. HERO_SCOOTER, CHIEF_GUEST_MR_FAZI, and GALLERY_IMAGE tiny 1x1 PNGs remain in DB from the playwright run — main agent may leave or clean via /admin/media.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Regression suite at /app/backend/tests/backend_test.py (20 tests, xdist -n 2 loadscope). New admin login: dreampickev@gmail.com / dreampick@123. Media API is category-based (/api/admin/media/upload with FormData field 'category'; /api/media?category=X for public reads). Single-slot categories (COMPANY_LOGO, HERO_SCOOTER, HERO_BACKGROUND, ABOUT_US, CHIEF_GUEST_MR_FAZI, CHIEF_GUEST_VISHAL_MEHARVADE, CHIEF_GUEST_SRINIVAS, CHIEF_GUEST_HEMANTH_KUMAR) auto-replace on new upload — old file is os.remove'd. Multi-slot (GALLERY_IMAGE, GALLERY_VIDEO) accumulate. Public /api/media/{filename} serves uploaded files. Frontend admin media manager uses data-testid pattern: slot-<CATEGORY>, <CATEGORY>-file-input, <CATEGORY>-upload-btn, current-media-<idPrefix>, delete-media-<idPrefix>. Navbar uses data-testid: nav-gallery, nav-about, nav-gallery-mobile, nav-about-mobile, nav-mobile-toggle, nav-logo-image. Home page has data-testid: home-hero-title, home-hero-scooter-image, home-chief-guests-grid, chief-guest-<CATEGORY>, home-gallery-slider, home-gallery-empty.",
+  "rca of the issue": "N/A — all v4 review-request flows PASSED end-to-end (backend + frontend). Only carry-over issue is the pre-existing commission rounding bug from iteration_2 which surfaces in the Admin dashboard's Direct Commissions Paid tile (₹2,474.95 vs spec's ₹2,475)."
+}

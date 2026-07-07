@@ -305,10 +305,10 @@ async def download_plan_pdf():
 
 
 @public_router.get("/media")
-async def public_media(section: Optional[str] = None):
+async def public_media(category: Optional[str] = None, _section_deprecated: Optional[str] = None):
     q = {"visible": True}
-    if section:
-        q["section"] = section
+    if category:
+        q["category"] = category
     docs = await media_assets().find(q).sort("display_order", 1).to_list(200)
     return {"media": _j(docs)}
 
@@ -1148,31 +1148,34 @@ UPLOAD_DIR = "/app/backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-class MediaMeta(BaseModel):
-    section: str  # hero | leadership | managers | gallery | logo
-    title: Optional[str] = None
-    caption: Optional[str] = None
-    display_order: int = 0
-    visible: bool = True
-    person_name: Optional[str] = None
-    media_type: str = "image"  # image | video
+# Fixed media categories. Single-slot categories auto-replace existing media on new upload.
+SINGLE_SLOT_CATEGORIES = {
+    "COMPANY_LOGO", "HERO_SCOOTER", "HERO_BACKGROUND", "ABOUT_US",
+    "CHIEF_GUEST_MR_FAZI", "CHIEF_GUEST_VISHAL_MEHARVADE",
+    "CHIEF_GUEST_SRINIVAS", "CHIEF_GUEST_HEMANTH_KUMAR",
+}
+MULTI_SLOT_CATEGORIES = {"GALLERY_IMAGE", "GALLERY_VIDEO"}
+ALL_CATEGORIES = SINGLE_SLOT_CATEGORIES | MULTI_SLOT_CATEGORIES
 
 
 @admin_router.post("/media/upload")
 async def admin_upload_media(
-    section: str = Form(...),
+    category: str = Form(...),
     title: Optional[str] = Form(None),
     caption: Optional[str] = Form(None),
     display_order: int = Form(0),
     visible: bool = Form(True),
-    person_name: Optional[str] = Form(None),
-    media_type: str = Form("image"),
     file: UploadFile = File(...),
     admin: dict = Depends(get_current_admin),
 ):
+    if category not in ALL_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"Invalid category. Valid: {sorted(ALL_CATEGORIES)}")
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"):
         raise HTTPException(status_code=400, detail="Unsupported file type")
+    is_video = ext in (".mp4", ".webm", ".mov")
+    media_type = "video" if is_video else "image"
+
     fid = str(uuid.uuid4())
     filename = f"{fid}{ext}"
     path = os.path.join(UPLOAD_DIR, filename)
@@ -1182,19 +1185,41 @@ async def admin_upload_media(
     with open(path, "wb") as f:
         f.write(content)
     url = f"/api/media/{filename}"
+
+    # For single-slot categories, remove any existing media in that slot
+    if category in SINGLE_SLOT_CATEGORIES:
+        async for old in media_assets().find({"category": category}):
+            try:
+                os.remove(os.path.join(UPLOAD_DIR, old.get("filename", "")))
+            except Exception:
+                pass
+        await media_assets().delete_many({"category": category})
+
     doc = {
-        "_id": fid, "section": section, "title": title, "caption": caption,
-        "display_order": display_order, "visible": visible, "person_name": person_name,
-        "media_type": media_type, "url": url, "filename": filename,
-        "uploaded_by": admin["_id"], "created_at": _now_iso(),
+        "_id": fid,
+        "category": category,
+        "section": category.lower(),  # legacy compat
+        "title": title,
+        "caption": caption,
+        "display_order": display_order,
+        "visible": visible,
+        "media_type": media_type,
+        "url": url,
+        "filename": filename,
+        "uploaded_by": admin["_id"],
+        "created_at": _now_iso(),
     }
     await media_assets().insert_one(doc)
+    await _log_audit(admin, "MEDIA_UPLOAD", "media", fid, {"category": category})
     return {"media": _j(doc)}
 
 
 @admin_router.get("/media")
-async def admin_list_media(_: dict = Depends(get_current_admin)):
-    docs = await media_assets().find({}).sort("display_order", 1).to_list(500)
+async def admin_list_media(category: Optional[str] = None, _: dict = Depends(get_current_admin)):
+    q = {}
+    if category:
+        q["category"] = category
+    docs = await media_assets().find(q).sort([("category", 1), ("display_order", 1)]).to_list(500)
     return {"media": _j(docs)}
 
 
@@ -1208,7 +1233,7 @@ async def admin_delete_media(mid: str, admin: dict = Depends(get_current_admin))
     except Exception:
         pass
     await media_assets().delete_one({"_id": mid})
-    await _log_audit(admin, "MEDIA_DELETE", "media", mid, {})
+    await _log_audit(admin, "MEDIA_DELETE", "media", mid, {"category": doc.get("category")})
     return {"success": True}
 
 
@@ -1217,7 +1242,6 @@ class MediaUpdate(BaseModel):
     caption: Optional[str] = None
     display_order: Optional[int] = None
     visible: Optional[bool] = None
-    person_name: Optional[str] = None
 
 
 @admin_router.patch("/media/{mid}")
