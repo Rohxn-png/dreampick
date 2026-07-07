@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AdminLayout } from "@/components/AdminLayout";
 import { api, formatApiError, shortDate } from "@/lib/api";
 import { Input } from "@/components/ui/input";
@@ -128,7 +129,7 @@ export default function AdminUsers() {
                   <TableCell>{u.matched_pairs}</TableCell>
                   <TableCell className="text-white/70">{shortDate(u.created_at)}</TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="ghost" className="btn-outline-dp text-xs" onClick={() => openDetail(u)} data-testid={`admin-user-view-${u.user_code}`}>View</Button>
+                    <Link to={`/admin/users/${u._id}`}><Button size="sm" variant="ghost" className="btn-outline-dp text-xs" data-testid={`admin-user-view-${u.user_code}`}>View</Button></Link>
                   </TableCell>
                 </TableRow>
               ))}

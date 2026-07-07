@@ -10,8 +10,10 @@ const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, tid: "customer-nav-dashboard" },
   { to: "/dashboard/tree", label: "My Tree", icon: GitBranch, tid: "customer-nav-tree" },
   { to: "/dashboard/referrals", label: "Referrals", icon: Users, tid: "customer-nav-referrals" },
+  { to: "/dashboard/cashback", label: "Cashback", icon: DollarSign, tid: "customer-nav-cashback" },
   { to: "/dashboard/commissions", label: "Commissions", icon: DollarSign, tid: "customer-nav-commissions" },
   { to: "/dashboard/wallet", label: "Wallet", icon: Wallet, tid: "customer-nav-wallet" },
+  { to: "/dashboard/notifications", label: "Notifications", icon: User, tid: "customer-nav-notif" },
   { to: "/dashboard/profile", label: "Profile", icon: User, tid: "customer-nav-profile" },
 ];
 

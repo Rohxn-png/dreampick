@@ -105,12 +105,6 @@ async def get_current_active_customer(user: dict = Depends(get_current_user)) ->
 
 
 async def get_current_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user.get("role") not in ("ADMIN", "SUPER_ADMIN"):
+    if user.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-
-
-async def get_current_super_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user.get("role") != "SUPER_ADMIN":
-        raise HTTPException(status_code=403, detail="Super admin access required")
     return user

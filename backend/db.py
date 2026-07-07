@@ -61,6 +61,30 @@ def system_settings():
     return get_db().system_settings
 
 
+def cashback_schedule():
+    return get_db().cashback_schedule
+
+
+def notifications():
+    return get_db().notifications
+
+
+def media_assets():
+    return get_db().media_assets
+
+
+def password_reset_tokens():
+    return get_db().password_reset_tokens
+
+
+def payout_receipts():
+    return get_db().payout_receipts
+
+
+def bank_reveal_sessions():
+    return get_db().bank_reveal_sessions
+
+
 def counters():
     return get_db().counters
 

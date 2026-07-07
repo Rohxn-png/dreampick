@@ -1,0 +1,91 @@
+{
+  "summary": "Full regression testing of Dreampick v3 (activation flow, three commission types, secure bank reveal, plan PDF, password flows, media, admin RBAC). Backend: 30/32 pytest tests PASSED. Two failures pinpoint a REAL SPEC BUG in commission gross rounding (plan_price 54999 with two_decimals rounding yields ₹2,749.95 direct and ₹1,374.98 matching, but spec/PDF/plans page advertise ₹2,750 gross/₹2,475 net and ₹1,374 gross/₹1,236.60 net — the marketed values differ from what is stored in the DB and displayed in admin Settings). Frontend: Home, Plans, Login, Forgot-Password, Admin (dashboard, sidebar, User Detail masked bank card + Password Management, Settings with 3 config cards) all render correctly with correct branding/copy. Bank reveal modal + audit log verified via backend pytest (frontend reveal button hidden when no bank account exists). Two frontend issues: (a) /register STILL shows a Demo Notice checkbox reading 'I understand this is a demo application. No real payment or payout will occur' — spec explicitly says /register must have NO demo notice; (b) /register has a pre-filled referral code AARA574212 without a ref query param — appears to be a stale/leaked default.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/admin/orders/{id}/activate (tree_service.create_direct_referral_commission / update_ancestor_counts_and_create_matching)",
+        "issue": "Direct referral commission gross_amount = 2749.95 (54999 * 0.05, two_decimals) instead of the spec-required 2750. Consequently net = 2474.96 instead of 2475. Marketing (Plans page + PDF) shows 2,750/2,475, but activation stores 2,749.95/2,474.96 in the DB and Settings page shows 2,749.95. Suggested fix: either set plan_price=55000 for commission calc, OR change rounding_mode to 'nearest_rupee' or 'round_up' for direct_referral_config in seed.py.",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "POST /api/admin/orders/{id}/activate (matching income path)",
+        "issue": "Matching income commission gross_amount = 1374.98 (54999 * 0.025 = 1374.975 rounded up two_decimals) instead of spec-required 1374, net = 1237.48 instead of 1236.60. Marketing shows 1,374/1,236.60. Fix requires either round_down/floor for matching_config gross OR hardcoded gross value in tree_service.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "PATCH /api/admin/withdrawals/{wid}/{action}",
+        "issue": "Handler signature `payload: Optional[PayoutMarkPaid] = None` mixes body-optional with path — FastAPI treats it as required for approve/reject unless caller sends empty JSON. Not blocking (tests didn't exercise this), but fragile."
+      },
+      {
+        "endpoint": "auth.get_current_active_customer",
+        "issue": "Still lists 'SUPER_ADMIN' in allowed roles even though SUPER_ADMIN is removed system-wide. Dead code — cleanup."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Register.jsx",
+        "issue": "Displays a required checkbox with text 'I understand this is a demo application. No real payment or payout will occur. I agree to the terms & conditions.' — spec explicitly states /register has NO 'Demo Notice' text.",
+        "selector": "input[type=checkbox] label containing 'demo application'",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Register.jsx",
+        "issue": "Referral code field is auto-filled with 'AARA574212' even when no ?ref= query param is present. Should be empty when user visits /register directly.",
+        "selector": "input[placeholder*='referral' i]",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "Register.jsx",
+        "issue": "Form inputs (Full Name, Password, Confirm Password) have no name attributes and no data-testid — hurts testability. Only email input has type='email'.",
+        "selector": "n/a",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Plans page vs Settings/DB commission values",
+        "issue": "Plans page (marketing) shows gross ₹2,750/net ₹2,475 for direct referral and ₹1,374/₹1,236.60 for matching. Admin Settings live preview + actual DB commissions show ₹2,749.95/₹2,474.96 and ₹1,374.98/₹1,237.48. Customer will be paid a different amount than what was marketed.",
+        "affected_selectors": ["/plans page cards", "/admin/settings ConfigSection net cells"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Register",
+        "issues": ["Branding says 'DreamPick' (mid-word capital) on the register hero, inconsistent with 'Dreampick Private Limited' elsewhere"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "FIX commission gross rounding so DB values match /plans and PDF (₹2,750/₹2,475 direct, ₹1,374/₹1,236.60 matching). Recommended: set rounding_mode='nearest_rupee' for direct_referral_config and 'round_down' for matching_config in seed.py, OR bake exact gross overrides into tree_service.",
+    "REMOVE the 'I understand this is a demo application...' checkbox and gating from /register (Register.jsx).",
+    "REMOVE the hard-coded default referral code 'AARA574212' from /register — only prefill from ?ref= query param.",
+    "Add data-testid attributes to Register form inputs and to the 'Reveal Full Bank Details' button + reveal modal reason field for future automated testing.",
+    "Clean up auth.get_current_active_customer to drop the stale 'SUPER_ADMIN' role reference."
+  ],
+  "critical_code_review_comments": [
+    "routes.py ~1240 lines — split into auth/public/order/customer/admin/media modules for maintainability.",
+    "Mixed auth model: /auth/login sets cookies AND returns access_token in JSON (frontend uses only Bearer). Either drop set_auth_cookies or move fully to httpOnly cookies.",
+    "seed._wipe_demo_data is called on EVERY startup that lacks the 'dreampick_v3' marker — safe now, but if the marker is ever removed manually a fresh restart would wipe production. Consider a stronger guard (env var or explicit CLI flag).",
+    "tree_service._round_amount always ROUND_HALF_UP for two_decimals — for 54999*0.025=1374.975 that rounds to 1374.98; the spec expects 1374. Rounding mode must be data-driven per commission type OR gross computed from a fixed table.",
+    "commission unique index 'direct_unique_idx' includes (beneficiary,triggering_user,order_id) but insertion is not idempotent-safe against race — activating the same order concurrently could double-insert since try/except swallows only IntegrityError.",
+    "No rate limiting/brute-force lockout on /auth/login (spec mentions bcrypt but no lockout after 5 fails)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "94% (30/32)", "frontend": "85%"},
+  "test_credentials": "Admin: admin@dreampick.co.in / Admin@Dreampick2026 (auto-created from .env)",
+  "seed_data_creation": "Created ~15-20 TEST_* customers during pytest runs (registered + activated). Each has 10 cashback installments. Multiple TEST_ bank accounts on QA users. All test data uses TEST_ prefix in email for easy cleanup.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Regression suite at /app/backend/tests/backend_test.py (32 tests, uses pytest-xdist -n 2 loadscope from pytest.ini). Set REACT_APP_BACKEND_URL before running. Auth: Bearer token in localStorage key 'dp_access_token'. The two failing pytest tests are documenting a real spec deviation (commission rounding) — do NOT loosen assertions until the main agent fixes rounding. Frontend Register page has demo-notice bug + hardcoded default referral code that needs removal. Reveal flow selector paths need data-testids; backend reveal is fully covered via TestBankReveal class.",
+  "rca of the issue": "Root cause of commission mismatch: tree_service.py uses formula = plan_price * gross_percent / 100 with rounding_mode='two_decimals' (ROUND_HALF_UP to 0.01). For direct referral: 54999*0.05=2749.95 (exact, no rounding change). For matching: 54999*0.025=1374.975 → 1374.98. Spec expects direct=2750 gross (a full rupee) and matching=1374 (round down). The only way to satisfy both is either: (1) use different rounding per commission type (nearest_rupee for direct, round_down for matching), (2) treat gross as a fixed rupee value in the config regardless of plan_price, or (3) change plan_price to 55000 (but that breaks matching which would then be 1375). Reproduction: POST /api/orders/create followed by PATCH /admin/orders/{id}/activate — then GET /api/admin/commissions and inspect gross_amount for the resulting direct/matching commissions."
+}

@@ -1,167 +1,201 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PublicNav } from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
-import { formatINR } from "@/lib/api";
-import { Zap, Battery, Gauge, Sparkles, ShieldCheck, ArrowRight, GitBranch, Users, Wallet } from "lucide-react";
+import { api, formatINR } from "@/lib/api";
+import { Zap, Battery, Gauge, ShieldCheck, ArrowRight, ScrollText } from "lucide-react";
 
-const HERO_IMG = "https://images.unsplash.com/photo-1623079398118-11b5da627a00?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBFViUyMHNjb290ZXIlMjBzdHVkaW8lMjBsaWdodGluZyUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4MzI0OTk2Nnww&ixlib=rb-4.1.0&q=85";
-const LIFESTYLE = "https://images.unsplash.com/photo-1772456595053-98eb00580bb9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjByaWRpbmclMjBlbGVjdHJpYyUyMHNjb290ZXIlMjBjaXR5JTIwbmlnaHR8ZW58MHx8fHwxNzgzMjQ5OTY2fDA&ixlib=rb-4.1.0&q=85";
-
-const specs = [
-  { label: "Range", value: "120 km", icon: Battery },
-  { label: "Top Speed", value: "80 km/h", icon: Gauge },
-  { label: "Battery", value: "3.2 kWh LFP", icon: Zap },
-  { label: "Warranty", value: "3 years", icon: ShieldCheck },
+const LEADERSHIP = [
+  { role: "Company MD", name: "Suma B" },
+  { role: "Co-Director", name: "Venkatesh Naik" },
 ];
+const MANAGERS = ["Santhosh", "Durgesh Koli", "Manjunath Mudhol", "Hanumanth Raj", "Maruthi Ganti"];
 
-const faqs = [
-  { q: "How does the referral program work?", a: "When you purchase a Dream Pick scooter, you become an active member. You get a unique referral code. Every person who joins through your code is placed in either your LEFT or RIGHT branch, forming a binary tree. When your left and right team counts match up (1:1 pair), you earn ₹2,700 per matched pair." },
-  { q: "Is this a real payment or demo?", a: "This is a DEMO application. No real money is processed. Payments and payouts are simulated for testing the binary tree logic and commission workflow." },
-  { q: "What is the scooter price?", a: "The Dream Pick Volt X1 is priced at ₹54,999. This purchase is what activates your membership and finalizes your placement in the binary tree." },
-  { q: "How are commissions paid?", a: "In this demo, commissions accrue as PENDING once a matched pair is created. An admin then approves, marks paid, or rejects them. You can request withdrawals from your available (approved) balance." },
-];
+function PlaceholderAvatar({ initial }) {
+  return (
+    <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-[#7C3AED]/30 to-[#D4A93A]/20 border border-[#D4A93A]/20 flex items-center justify-center">
+      <span className="font-heading text-4xl gold-text">{initial}</span>
+    </div>
+  );
+}
 
 export default function Home() {
+  const [cfg, setCfg] = useState({ company_name: "Dreampick Private Limited", gst_number: "29AAMCD4327L1Z6", plan_price: 54999 });
+  const [galleryMedia, setGalleryMedia] = useState([]);
+  const [managerMedia, setManagerMedia] = useState([]);
+  const [leadershipMedia, setLeadershipMedia] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const c = await api.get("/config");
+        setCfg(c.data);
+        const [g, m, l] = await Promise.all([
+          api.get("/media?section=gallery"),
+          api.get("/media?section=managers"),
+          api.get("/media?section=leadership"),
+        ]);
+        setGalleryMedia(g.data.media || []);
+        setManagerMedia(m.data.media || []);
+        setLeadershipMedia(l.data.media || []);
+      } catch (_) {}
+    })();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#070B14] text-white">
+    <div className="min-h-screen bg-[#0F0A1F] text-white">
       <PublicNav />
+
       {/* Hero */}
-      <section className="hero-gradient relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/70">
-              <Sparkles className="w-3 h-3 text-[#00E5FF]" /> Demo Mode — Payments Simulated
+      <section className="hero-gradient">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-24 grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 border border-[#D4A93A]/40 rounded-full px-4 py-1.5 text-xs text-[#F4D06F]">
+              <span className="w-1.5 h-1.5 bg-[#D4A93A] rounded-full animate-pulse"></span> {cfg.company_name}
             </div>
-            <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight font-light" data-testid="home-hero-title">
-              Ride the <br />
-              <span className="text-[#00E5FF]">electric future.</span><br />
-              Refer. Earn. Repeat.
+            <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl leading-[0.95]" data-testid="home-hero-title">
+              Affordable electric<br />
+              mobility with a <span className="gold-text">transparent</span><br />
+              earning platform.
             </h1>
             <p className="text-white/70 text-lg max-w-lg leading-relaxed">
-              Dream Pick Volt X1 — premium EV scooter with a binary matching reward program. Every matched pair in your team pays you <span className="text-[#00FFA3]">₹2,700</span>.
+              Buy the Basic EV Scooter Plan, share your referral, and earn structured monthly cashback, direct referral commissions, and 1:1 matching income — all manually paid, fully audited.
             </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <Link to="/scooter">
-                <Button className="btn-primary rounded-full px-8 py-6 text-base" data-testid="home-buy-btn">
-                  Buy Scooter — {formatINR(54999)} <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="ghost" className="btn-outline-dp rounded-full px-8 py-6 text-base" data-testid="home-register-btn">
-                  Register
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 rounded-full px-6 py-6" data-testid="home-login-btn">
-                  Login
-                </Button>
-              </Link>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link to="/plans"><Button className="btn-primary rounded-full px-8 py-6 text-base" data-testid="home-view-plans-btn">View Plans <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+              <Link to="/register"><Button variant="ghost" className="btn-outline-dp rounded-full px-8 py-6 text-base" data-testid="home-register-btn">Register</Button></Link>
+              <Link to="/login"><Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 rounded-full px-6 py-6" data-testid="home-login-btn">Login</Button></Link>
+            </div>
+            <div className="flex items-center gap-6 pt-4 text-xs text-white/50">
+              <div><span className="text-[#F4D06F]">GST</span> · {cfg.gst_number}</div>
+              <div><span className="text-[#F4D06F]">Plan Price</span> · {formatINR(cfg.plan_price)} + GST</div>
             </div>
           </div>
-          <div className="lg:col-span-6 relative">
-            <div className="absolute -inset-6 bg-gradient-to-br from-[#00E5FF]/10 to-[#0055FF]/5 blur-3xl rounded-full"></div>
-            <img src={HERO_IMG} alt="Dream Pick EV Scooter" className="relative rounded-3xl border border-white/10 aspect-[4/5] w-full object-cover" data-testid="home-hero-image" />
-            <div className="absolute bottom-6 left-6 right-6 glass-card rounded-2xl p-4 flex items-center gap-4">
-              <div>
-                <div className="overline text-[#00E5FF]">Volt X1</div>
-                <div className="font-heading text-xl">Urban Electric Icon</div>
+          <div className="lg:col-span-5 relative">
+            <div className="dp-card p-6 h-96 flex flex-col items-center justify-center gap-4 border-[#D4A93A]/30">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#7C3AED]/40 to-[#D4A93A]/30 flex items-center justify-center border border-[#D4A93A]/30">
+                <Zap className="w-12 h-12 text-[#F4D06F]" />
               </div>
-              <div className="ml-auto text-right">
-                <div className="text-xs text-white/50">Starts at</div>
-                <div className="font-heading text-2xl text-[#00E5FF]">{formatINR(54999)}</div>
+              <div className="text-center">
+                <div className="overline text-[#D4A93A]">EV Scooter Placeholder</div>
+                <div className="font-heading text-2xl mt-1">Basic EV Scooter Plan</div>
+                <div className="text-white/60 text-sm mt-2 max-w-xs">Hero product image will appear here after upload from the admin media manager.</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Specs strip */}
-      <section className="py-14 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {specs.map((s, i) => (
-            <div key={i} className="dp-card p-6" data-testid={`home-spec-${i}`}>
-              <s.icon className="w-6 h-6 text-[#00E5FF] mb-3" strokeWidth={1.5} />
-              <div className="overline text-white/50">{s.label}</div>
-              <div className="mt-1 font-heading text-2xl">{s.value}</div>
-            </div>
-          ))}
+      {/* Vision & Mission (bilingual) */}
+      <section className="py-20 border-t border-[#D4A93A]/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-6">
+          <div className="dp-card p-8">
+            <div className="overline text-[#D4A93A]">Vision · ದೃಷ್ಟಿ</div>
+            <h2 className="font-heading text-3xl mt-3">Electric mobility for every household.</h2>
+            <p className="text-white/75 leading-relaxed mt-4">To make affordable electric mobility accessible to every household while creating transparent and sustainable earning opportunities through responsible EV ownership.</p>
+            <p className="text-white/60 leading-relaxed mt-3" lang="kn">ಪ್ರತಿ ಕುಟುಂಬಕ್ಕೂ ಕೈಗೆಟುಕುವ ವಿದ್ಯುತ್ ವಾಹನ ಸೌಲಭ್ಯವನ್ನು ತಲುಪಿಸುವುದರ ಜೊತೆಗೆ, ಜವಾಬ್ದಾರಿಯುತ ಇವಿ ಮಾಲೀಕತ್ವದ ಮೂಲಕ ಪಾರದರ್ಶಕ ಮತ್ತು ಸ್ಥಿರ ಆದಾಯದ ಅವಕಾಶಗಳನ್ನು ಸೃಷ್ಟಿಸುವುದು ನಮ್ಮ ದೃಷ್ಟಿಯಾಗಿದೆ.</p>
+          </div>
+          <div className="dp-card p-8">
+            <div className="overline text-[#D4A93A]">Mission · ಧ್ಯೇಯ</div>
+            <h2 className="font-heading text-3xl mt-3">Transparent digital rewards platform.</h2>
+            <p className="text-white/75 leading-relaxed mt-4">To provide quality EV scooters, clear customer support, flexible loan assistance, and a transparent digital platform for managing purchases, rewards, referrals, and payouts.</p>
+            <p className="text-white/60 leading-relaxed mt-3" lang="kn">ಗುಣಮಟ್ಟದ ಇವಿ ಸ್ಕೂಟರ್‌ಗಳು, ಸ್ಪಷ್ಟ ಗ್ರಾಹಕ ಸಹಾಯ, ಸುಲಭ ಸಾಲ ಸೌಲಭ್ಯ ಮತ್ತು ಖರೀದಿ, ಬಹುಮಾನ, ರೆಫರಲ್ ಹಾಗೂ ಪಾವತಿಗಳನ್ನು ಪಾರದರ್ಶಕವಾಗಿ ನಿರ್ವಹಿಸುವ ಡಿಜಿಟಲ್ ವೇದಿಕೆಯನ್ನು ಒದಗಿಸುವುದು ನಮ್ಮ ಧ್ಯೇಯವಾಗಿದೆ.</p>
+          </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="py-24">
+      {/* GST */}
+      <section className="py-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="grid lg:grid-cols-12 gap-10 items-start">
-            <div className="lg:col-span-4">
-              <div className="overline text-[#00E5FF] mb-3">Referral Program</div>
-              <h2 className="font-heading text-4xl lg:text-5xl tracking-tight font-medium">
-                A binary tree that pays you for balance.
-              </h2>
-              <p className="mt-4 text-white/60 leading-relaxed">
-                Buy the scooter. Get a unique referral code. Every person who joins through you gets placed on your LEFT or RIGHT branch. Every 1:1 matched pair pays you ₹2,700.
-              </p>
+          <div className="dp-card-gold rounded-2xl p-6 flex flex-wrap justify-between items-center gap-4" data-testid="home-gst-card">
+            <div>
+              <div className="overline text-[#D4A93A]">GST Number</div>
+              <div className="font-heading text-2xl mt-1 font-mono text-[#F4D06F]">{cfg.gst_number}</div>
             </div>
-            <div className="lg:col-span-8 grid md:grid-cols-3 gap-4">
-              {[
-                { icon: Zap, title: "Buy & Activate", desc: "Purchase the Volt X1 to activate your Dream Pick membership.", tid: "how-1" },
-                { icon: GitBranch, title: "Refer + Place", desc: "Share your code. New members join your LEFT or RIGHT branch.", tid: "how-2" },
-                { icon: Wallet, title: "Earn on Pairs", desc: "Get ₹2,700 for every matched left–right pair in your team.", tid: "how-3" },
-              ].map((s, i) => (
-                <div key={i} className="dp-card p-6" data-testid={s.tid}>
-                  <s.icon className="w-6 h-6 text-[#00FFA3] mb-4" strokeWidth={1.5} />
-                  <div className="font-heading text-lg mb-2">{s.title}</div>
-                  <div className="text-white/60 text-sm leading-relaxed">{s.desc}</div>
+            <div className="text-sm text-white/60">Registered under {cfg.company_name}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Leadership */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="overline text-[#D4A93A]">Leadership</div>
+          <h2 className="font-heading text-4xl mt-2 mb-8">Guided by experienced leadership.</h2>
+          <div className="grid sm:grid-cols-2 gap-6" data-testid="home-leadership-grid">
+            {LEADERSHIP.map((p) => {
+              const media = leadershipMedia.find(m => (m.person_name || "").toLowerCase() === p.name.toLowerCase());
+              return (
+                <div key={p.name} className="dp-card p-6 flex gap-4 items-center">
+                  <div className="w-24 h-24 shrink-0">
+                    {media?.url ? (
+                      <img src={`${process.env.REACT_APP_BACKEND_URL}${media.url}`} alt={p.name} className="w-24 h-24 rounded-xl object-cover border border-[#D4A93A]/30" />
+                    ) : <PlaceholderAvatar initial={p.name[0]} />}
+                  </div>
+                  <div>
+                    <div className="overline text-[#D4A93A]">{p.role}</div>
+                    <div className="font-heading text-2xl mt-1">{p.name}</div>
+                    {!media && <div className="text-xs text-white/40 mt-2">Photo pending upload from admin.</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Managers carousel */}
+      <section className="py-16 border-y border-[#D4A93A]/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="overline text-[#D4A93A]">Managers</div>
+          <h2 className="font-heading text-4xl mt-2 mb-6">Meet our regional managers.</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2" data-testid="home-managers-carousel">
+            {MANAGERS.map((name) => {
+              const media = managerMedia.find(m => (m.person_name || "").toLowerCase() === name.toLowerCase());
+              return (
+                <div key={name} className="dp-card p-4 w-48 shrink-0">
+                  {media?.url ? (
+                    <img src={`${process.env.REACT_APP_BACKEND_URL}${media.url}`} alt={name} className="w-full aspect-square rounded-lg object-cover border border-[#D4A93A]/20" />
+                  ) : <PlaceholderAvatar initial={name[0]} />}
+                  <div className="mt-3 font-heading text-lg text-center">{name}</div>
+                  {!media && <div className="text-[10px] text-white/40 text-center mt-1">Photo pending</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Gallery */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="overline text-[#D4A93A]">Gallery</div>
+          <h2 className="font-heading text-4xl mt-2 mb-6">Photos & videos.</h2>
+          {galleryMedia.length === 0 ? (
+            <div className="dp-card p-10 text-center text-white/50" data-testid="home-gallery-empty">
+              Gallery is empty. Approved photos and videos uploaded from the admin portal will appear here.
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2" data-testid="home-gallery-slider">
+              {galleryMedia.map((g) => (
+                <div key={g._id} className="dp-card p-3 w-72 shrink-0">
+                  {g.media_type === "video" ? (
+                    <video controls className="w-full h-40 rounded-lg object-cover bg-black" src={`${process.env.REACT_APP_BACKEND_URL}${g.url}`} />
+                  ) : (
+                    <img src={`${process.env.REACT_APP_BACKEND_URL}${g.url}`} alt={g.title || "Gallery"} className="w-full h-40 rounded-lg object-cover" />
+                  )}
+                  {g.title && <div className="mt-2 font-medium text-sm">{g.title}</div>}
+                  {g.caption && <div className="text-xs text-white/60">{g.caption}</div>}
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* Lifestyle image */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="relative rounded-3xl overflow-hidden border border-white/10">
-            <img src={LIFESTYLE} alt="EV ride" className="w-full h-[420px] object-cover" data-testid="home-lifestyle-image"/>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#070B14] via-[#070B14]/60 to-transparent flex items-center">
-              <div className="p-10 max-w-lg">
-                <div className="overline text-[#00E5FF]">Own the streets</div>
-                <h3 className="font-heading text-3xl lg:text-4xl mt-2">Silent. Smart. Yours.</h3>
-                <p className="mt-3 text-white/70">Zero emissions. Zero noise. Full charge in under 4 hours.</p>
-                <Link to="/scooter">
-                  <Button className="btn-primary rounded-full mt-6 px-6" data-testid="home-lifestyle-cta">
-                    Explore the Volt X1 <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="py-24 border-t border-white/5">
-        <div className="max-w-4xl mx-auto px-6 lg:px-10">
-          <div className="overline text-[#00E5FF] mb-3">FAQ</div>
-          <h2 className="font-heading text-4xl mb-10">Questions answered.</h2>
-          <div className="space-y-3">
-            {faqs.map((f, i) => (
-              <details key={i} className="dp-card p-5 group" data-testid={`home-faq-${i}`}>
-                <summary className="cursor-pointer list-none flex justify-between items-center font-heading text-lg">
-                  {f.q}
-                  <span className="text-[#00E5FF] group-open:rotate-45 transition-transform">+</span>
-                </summary>
-                <p className="mt-3 text-white/60 text-sm leading-relaxed">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-white/5 py-10 text-center text-white/40 text-xs">
-        <div className="brand-logo text-xl text-white mb-2">Dream<span className="text-[#00E5FF]">Pick</span></div>
-        © {new Date().getFullYear()} Dream Pick — Demo application. No real payments are processed.
+      <footer className="border-t border-[#D4A93A]/15 py-8 text-center text-white/40 text-xs">
+        <div className="brand-logo text-lg text-white mb-1"><span className="gold-text">Dreampick</span> Private Limited</div>
+        © {new Date().getFullYear()} — GST {cfg.gst_number}
       </footer>
     </div>
   );

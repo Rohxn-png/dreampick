@@ -7,85 +7,66 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatApiError } from "@/lib/api";
-import { Zap } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const loc = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const user = await login(email, password);
-      toast.success("Welcome back!");
-      const dest = location.state?.from ||
-        (user.role === "ADMIN" || user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
+      toast.success("Welcome back");
+      const dest = loc.state?.from || (user.role === "ADMIN" ? "/admin" : "/dashboard");
       navigate(dest, { replace: true });
     } catch (err) {
       toast.error(formatApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fillDemo = (kind) => {
-    if (kind === "admin") { setEmail("admin@dreampick.demo"); setPassword("Demo@123"); }
-    else if (kind === "superadmin") { setEmail("superadmin@dreampick.demo"); setPassword("Demo@123"); }
-    else { setEmail("customer1@dreampick.demo"); setPassword("Demo@123"); }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white">
+    <div className="min-h-screen bg-[#0F0A1F] text-white">
       <PublicNav />
-      <div className="hero-gradient min-h-[calc(100vh-64px)] flex items-center px-6 py-10">
+      <div className="hero-gradient min-h-[calc(100vh-64px-40px)] flex items-center px-6 py-10">
         <div className="max-w-md w-full mx-auto">
           <div className="text-center mb-8">
-            <Link to="/" className="brand-logo text-4xl inline-block">
-              Dream<span className="text-[#00E5FF]">Pick</span>
-            </Link>
-            <div className="overline text-[#00E5FF] mt-3">Sign in</div>
-            <p className="text-white/60 text-sm mt-2">Welcome back. Login to your account.</p>
+            <div className="brand-logo text-4xl">Dream<span className="gold-text">pick</span></div>
+            <div className="overline text-[#D4A93A] mt-3">Sign in</div>
+            <p className="text-white/60 text-sm mt-2">Welcome back. Log in to your account.</p>
           </div>
           <div className="dp-card p-8">
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <Label className="text-white/70 text-xs uppercase tracking-widest">Email</Label>
-                <Input
-                  type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@dreampick.demo"
-                  className="mt-2 bg-[#070B14] border-white/10 text-white h-11"
-                  data-testid="login-email-input"
-                />
+                <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                  className="mt-2 bg-[#0F0A1F] border-white/10 h-11" data-testid="login-email-input" />
               </div>
               <div>
                 <Label className="text-white/70 text-xs uppercase tracking-widest">Password</Label>
-                <Input
-                  type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="mt-2 bg-[#070B14] border-white/10 text-white h-11"
-                  data-testid="login-password-input"
-                />
+                <div className="relative">
+                  <Input type={showPw ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)}
+                    className="mt-2 bg-[#0F0A1F] border-white/10 h-11 pr-10" data-testid="login-password-input" />
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/4 text-white/50" data-testid="login-password-toggle">
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="mt-2 text-right">
+                  <Link to="/forgot-password" className="text-xs text-[#F4D06F] hover:underline" data-testid="login-forgot-link">Forgot password?</Link>
+                </div>
               </div>
-              <Button className="btn-primary w-full h-11 rounded-lg text-base" type="submit" disabled={loading} data-testid="login-submit-btn">
-                {loading ? "Signing in…" : "Sign in"} <Zap className="w-4 h-4 ml-2" />
+              <Button type="submit" disabled={loading} className="btn-primary w-full h-11" data-testid="login-submit-btn">
+                {loading ? "Signing in…" : "Sign in"} <LogIn className="w-4 h-4 ml-2" />
               </Button>
             </form>
-            <div className="mt-6 pt-6 border-t border-white/10">
-              <div className="text-xs text-white/50 mb-3">Try a demo account:</div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="ghost" size="sm" className="btn-outline-dp text-xs" onClick={() => fillDemo("customer")} data-testid="login-demo-customer-btn">Customer</Button>
-                <Button variant="ghost" size="sm" className="btn-outline-dp text-xs" onClick={() => fillDemo("admin")} data-testid="login-demo-admin-btn">Admin</Button>
-                <Button variant="ghost" size="sm" className="btn-outline-dp text-xs" onClick={() => fillDemo("superadmin")} data-testid="login-demo-superadmin-btn">Super Admin</Button>
-              </div>
-            </div>
             <p className="mt-6 text-center text-sm text-white/50">
-              New here?{" "}
-              <Link to="/register" className="text-[#00E5FF] hover:underline" data-testid="login-register-link">Create an account</Link>
+              New here? <Link to="/register" className="text-[#F4D06F] hover:underline" data-testid="login-register-link">Create an account</Link>
             </p>
           </div>
         </div>

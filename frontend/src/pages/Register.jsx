@@ -92,8 +92,10 @@ export default function Register() {
         placement_side: form.referral_code.trim() ? form.placement_side : null,
       };
       await register(payload);
-      toast.success("Account created. Please purchase the scooter to activate.");
-      navigate("/scooter");
+      toast.success("Account created. Submitting your activation request…");
+      // Auto-create the activation order
+      try { await api.post("/orders/create", {}); } catch (_) {}
+      navigate("/dashboard");
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -253,8 +255,8 @@ export default function Register() {
                 )}
               </div>
               <div className="dp-card p-6">
-                <div className="overline text-[#00FFA3] mb-2">Demo Notice</div>
-                <p className="text-sm text-white/60">You'll be redirected to the mock checkout after registration. No real money is charged.</p>
+                <div className="overline text-[#F4D06F] mb-2">Ready to use</div>
+                <p className="text-sm text-white/60">After registration, submit an activation request. Payment is confirmed manually by our team.</p>
               </div>
             </aside>
           </div>
