@@ -63,7 +63,8 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "reset-production-data": "node scripts/reset-production-data.js"
   },
   "browserslist": {
     "production": [

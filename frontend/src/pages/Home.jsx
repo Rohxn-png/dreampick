@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PublicNav } from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api, formatINR } from "@/lib/api";
-import { Zap, ArrowRight, Sparkles, Play } from "lucide-react";
+import { Zap, ArrowRight, Sparkles, Play, FileText, ExternalLink, Download, X, ShieldCheck } from "lucide-react";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 
 const LEADERSHIP = [
-  { role: "Company MD", name: "Suma B" },
-  { role: "Co-Director", name: "Venkatesh Naik" },
+  { role: "Managing Director", name: "Suma B", category: "COMPANY_MD_PHOTO", initial: "S" },
+  { role: "Co-Director", name: "Venkatesh Naik", category: "CO_DIRECTOR_PHOTO", initial: "V" },
 ];
 
 const CHIEF_GUESTS = [
@@ -19,10 +20,54 @@ const CHIEF_GUESTS = [
   { name: "Hemanth Kumar", designation: "Marketing Head", category: "CHIEF_GUEST_HEMANTH_KUMAR" },
 ];
 
-function PlaceholderAvatar({ initial }) {
+const LICENSE_SLOTS = [
+  { category: "COMPANY_LICENSE_1", index: 1 },
+  { category: "COMPANY_LICENSE_2", index: 2 },
+  { category: "COMPANY_LICENSE_3", index: 3 },
+  { category: "COMPANY_LICENSE_4", index: 4 },
+  { category: "COMPANY_LICENSE_5", index: 5 },
+  { category: "COMPANY_LICENSE_6", index: 6 },
+];
+
+function PlaceholderAvatar({ initial, size = "text-5xl" }) {
   return (
-    <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-[#7C3AED]/40 to-[#D4A93A]/30 border border-[#D4A93A]/30 flex items-center justify-center">
-      <span className="font-heading text-5xl gold-text">{initial}</span>
+    <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#7C3AED]/40 to-[#D4A93A]/30 border border-[#D4A93A]/30 flex items-center justify-center">
+      <span className={`font-heading ${size} gold-text`}>{initial}</span>
+    </div>
+  );
+}
+
+/** Card with mouse-driven 3D tilt & premium glow. */
+function TiltCard({ children, onClick, testId, className = "" }) {
+  const ref = React.useRef(null);
+  const onMove = (e) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rx = (py - 0.5) * -10;
+    const ry = (px - 0.5) * 12;
+    el.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px) scale(1.02)`;
+    el.style.setProperty("--mx", `${px * 100}%`);
+    el.style.setProperty("--my", `${py * 100}%`);
+  };
+  const onLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "";
+  };
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={onClick}
+      className={`dp-leader-card group relative cursor-pointer rounded-2xl overflow-hidden ${className}`}
+      data-testid={testId}
+      style={{ transition: "transform 0.35s cubic-bezier(.2,.9,.3,1)" }}
+    >
+      {children}
     </div>
   );
 }
@@ -42,37 +87,56 @@ export default function Home() {
   const [aboutImg, setAboutImg] = useState(null);
   const [gallery, setGallery] = useState([]);
   const [chiefMedia, setChiefMedia] = useState({});
-  const [leadershipMedia, setLeadershipMedia] = useState([]);
+  const [leadershipMedia, setLeadershipMedia] = useState({});
+  const [licenses, setLicenses] = useState({});
+  const [lightbox, setLightbox] = useState(null); // { type: 'leader'|'license', ...data }
 
   useEffect(() => {
     (async () => {
       try {
         const c = await api.get("/config"); setCfg(c.data);
-      } catch (_) {}
-      const [lgo, hero, hbg, about, gImg, gVid, lead] = await Promise.all([
+      } catch (_e) { /* keep defaults */ }
+      const [lgo, hero, hbg, about, gImg, gVid] = await Promise.all([
         fetchCategory("COMPANY_LOGO"),
         fetchCategory("HERO_SCOOTER"),
         fetchCategory("HERO_BACKGROUND"),
         fetchCategory("ABOUT_US"),
         fetchCategory("GALLERY_IMAGE"),
         fetchCategory("GALLERY_VIDEO"),
-        // Legacy: any items uploaded via old section=leadership (rare after v4 wipe)
-        api.get("/media?category=LEADERSHIP").then(r => r.data.media || []).catch(() => []),
       ]);
       setLogo(lgo[0] || null);
       setHeroScooter(hero[0] || null);
       setHeroBg(hbg[0] || null);
       setAboutImg(about[0] || null);
       setGallery([...gImg, ...gVid].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
-      setLeadershipMedia(lead);
+
+      // Leadership (MD + Co-Director) — dedicated categories
+      const leadMap = {};
+      for (const p of LEADERSHIP) {
+        const arr = await fetchCategory(p.category);
+        leadMap[p.category] = arr[0] || null;
+      }
+      setLeadershipMedia(leadMap);
+
       const cg = {};
       for (const g of CHIEF_GUESTS) {
         const arr = await fetchCategory(g.category);
         cg[g.category] = arr[0] || null;
       }
       setChiefMedia(cg);
+
+      // Licenses
+      const licMap = {};
+      for (const l of LICENSE_SLOTS) {
+        const arr = await fetchCategory(l.category);
+        licMap[l.category] = arr[0] || null;
+      }
+      setLicenses(licMap);
     })();
   }, []);
+
+  const openLeader = (p) => setLightbox({ type: "leader", ...p, media: leadershipMedia[p.category] });
+  const openLicense = (l, media) => setLightbox({ type: "license", ...l, media });
 
   return (
     <div className="min-h-screen bg-[#0F0A1F] text-white">
@@ -177,26 +241,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Leadership */}
-      <section id="leadership" className="py-16 scroll-mt-24">
+      {/* Leadership — larger cards with 3D tilt + click to open lightbox */}
+      <section id="leadership" className="py-20 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="overline text-[#D4A93A]">Leadership</div>
-          <h2 className="font-heading text-4xl mt-2 mb-8">Guided by experienced leadership.</h2>
-          <div className="grid sm:grid-cols-2 gap-6" data-testid="home-leadership-grid">
+          <h2 className="font-heading text-4xl mt-2 mb-3">Guided by experienced leadership.</h2>
+          <p className="text-white/55 text-sm max-w-xl mb-10">Meet the leaders steering Dreampick. Tap on a photo to view the full portrait.</p>
+          <div className="grid md:grid-cols-2 gap-8" data-testid="home-leadership-grid">
             {LEADERSHIP.map((p) => {
-              const media = leadershipMedia.find(m => (m.title || "").toLowerCase() === p.name.toLowerCase());
+              const media = leadershipMedia[p.category];
               return (
-                <div key={p.name} className="dp-card p-6 flex gap-4 items-center dp-hover-lift">
-                  <div className="w-24 h-24 shrink-0">
-                    {media?.url ? (
-                      <img src={`${BACKEND}${media.url}`} alt={p.name} className="w-24 h-24 rounded-xl object-cover border border-[#D4A93A]/30 dp-tilt" />
-                    ) : <PlaceholderAvatar initial={p.name[0]} />}
+                <TiltCard key={p.category} onClick={() => openLeader(p)} testId={`leader-card-${p.category}`}>
+                  {/* Halo glow */}
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+                    style={{
+                      background:
+                        "radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(212,169,58,0.25), rgba(124,58,237,0.15) 40%, transparent 60%)",
+                    }}
+                  />
+                  <div className="relative dp-card !bg-gradient-to-b !from-[#1F1836]/95 !to-[#150C2D]/95 p-6 md:p-8 border !border-[#D4A93A]/25 rounded-2xl">
+                    <div className="w-full aspect-[4/5] md:aspect-square rounded-xl overflow-hidden border border-[#D4A93A]/30 relative bg-black/20">
+                      {media?.url ? (
+                        <img
+                          src={`${BACKEND}${media.url}`}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          data-testid={`leader-photo-${p.category}`}
+                        />
+                      ) : (
+                        <PlaceholderAvatar initial={p.initial} size="text-8xl" />
+                      )}
+                      {/* Corner badge */}
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-[#0F0A1F]/60 border border-[#D4A93A]/40 rounded-full px-3 py-1 text-[10px] uppercase tracking-widest text-[#F4D06F]">
+                        {p.role}
+                      </div>
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md bg-[#0F0A1F]/70 border border-[#D4A93A]/50 rounded-full px-3 py-1 text-[10px] text-white/90 flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" /> View
+                      </div>
+                    </div>
+                    <div className="mt-5">
+                      <div className="font-heading text-3xl md:text-4xl leading-tight" data-testid={`leader-name-${p.category}`}>{p.name}</div>
+                      <div className="mt-2 text-sm text-[#F4D06F]">{p.role}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="overline text-[#D4A93A]">{p.role}</div>
-                    <div className="font-heading text-2xl mt-1">{p.name}</div>
-                  </div>
-                </div>
+                </TiltCard>
               );
             })}
           </div>
@@ -208,7 +297,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="overline text-[#D4A93A]">Chief Guests</div>
           <h2 className="font-heading text-4xl mt-2 mb-6">Our distinguished chief guests.</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible" data-testid="home-chief-guests-grid">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="home-chief-guests-grid">
             {CHIEF_GUESTS.map((g) => {
               const m = chiefMedia[g.category];
               return (
@@ -262,6 +351,153 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Licenses (below Gallery) */}
+      <section id="license" className="py-20 border-t border-[#D4A93A]/10 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+          <div className="overline text-[#D4A93A] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" /> Licenses & Certifications
+          </div>
+          <h2 className="font-heading text-4xl mt-2 mb-3">Registered, compliant & transparent.</h2>
+          <p className="text-white/55 text-sm max-w-2xl mb-10">
+            Our official licenses and certifications. Click any tile to preview the image or view/download the PDF.
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="home-license-grid">
+            {LICENSE_SLOTS.map((l) => {
+              const m = licenses[l.category];
+              if (!m) {
+                return (
+                  <div key={l.category} className="dp-card p-6 text-center flex flex-col items-center justify-center min-h-[220px] opacity-70" data-testid={`license-empty-${l.index}`}>
+                    <FileText className="w-8 h-8 text-[#F4D06F]/40 mb-3" />
+                    <div className="overline text-[#D4A93A]">License Slot {l.index}</div>
+                    <div className="text-xs text-white/40 mt-1">Awaiting upload</div>
+                  </div>
+                );
+              }
+              const isPdf = m.media_type === "pdf";
+              return (
+                <div
+                  key={l.category}
+                  className="dp-card overflow-hidden dp-hover-lift cursor-pointer group"
+                  onClick={() => openLicense(l, m)}
+                  data-testid={`license-card-${l.index}`}
+                >
+                  <div className="relative h-44 bg-[#0F0A1F]">
+                    {isPdf ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center px-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7C3AED]/30 to-[#D4A93A]/30 flex items-center justify-center border border-[#D4A93A]/30 mb-2">
+                          <FileText className="w-7 h-7 text-[#F4D06F]" />
+                        </div>
+                        <div className="text-[10px] uppercase tracking-widest text-[#F4D06F]">PDF Document</div>
+                      </div>
+                    ) : (
+                      <img src={`${BACKEND}${m.url}`} alt={m.title || `License ${l.index}`} className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A1F] via-transparent to-transparent opacity-70" />
+                    <div className="absolute top-3 right-3 backdrop-blur-md bg-[#0F0A1F]/70 border border-[#D4A93A]/40 rounded-full px-2 py-0.5 text-[9px] uppercase tracking-widest text-[#F4D06F]">
+                      {isPdf ? "PDF" : "Image"}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="font-heading text-lg leading-tight truncate" data-testid={`license-title-${l.index}`}>
+                      {m.title || `License ${l.index}`}
+                    </div>
+                    {m.description && (
+                      <p className="text-xs text-white/55 mt-1 line-clamp-2">{m.description}</p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between text-[10px] text-white/40">
+                      <span>{m.issue_date ? `Issued ${m.issue_date}` : ""}</span>
+                      <span>{m.expiry_date ? `Expires ${m.expiry_date}` : ""}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Leader/License Lightbox */}
+      <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
+        <DialogContent className="max-w-3xl bg-[#150C2D] border border-[#D4A93A]/30 text-white p-0 overflow-hidden" data-testid="lightbox-modal">
+          {lightbox && (
+            <div>
+              <button
+                onClick={() => setLightbox(null)}
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black flex items-center justify-center text-white"
+                data-testid="lightbox-close"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="grid md:grid-cols-2">
+                <div className="bg-[#0F0A1F] flex items-center justify-center min-h-[320px]">
+                  {lightbox.type === "leader" ? (
+                    lightbox.media?.url ? (
+                      <img src={`${BACKEND}${lightbox.media.url}`} alt={lightbox.name} className="max-h-[70vh] w-full object-contain" />
+                    ) : (
+                      <div className="w-full h-96"><PlaceholderAvatar initial={lightbox.initial} size="text-9xl" /></div>
+                    )
+                  ) : lightbox.media?.media_type === "pdf" ? (
+                    <div className="p-8 text-center">
+                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#7C3AED]/40 to-[#D4A93A]/40 flex items-center justify-center border border-[#D4A93A]/30 mb-4">
+                        <FileText className="w-10 h-10 text-[#F4D06F]" />
+                      </div>
+                      <div className="text-sm text-white/60">PDF Document</div>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <a href={`${BACKEND}${lightbox.media.url}`} target="_blank" rel="noreferrer">
+                          <Button className="btn-primary w-full" data-testid="lightbox-view-pdf"><ExternalLink className="w-4 h-4 mr-2" /> View in new tab</Button>
+                        </a>
+                        <a href={`${BACKEND}${lightbox.media.url}`} download>
+                          <Button variant="ghost" className="btn-outline-dp w-full" data-testid="lightbox-download-pdf"><Download className="w-4 h-4 mr-2" /> Download</Button>
+                        </a>
+                      </div>
+                    </div>
+                  ) : lightbox.media?.url ? (
+                    <img src={`${BACKEND}${lightbox.media.url}`} alt={lightbox.media?.title || "License"} className="max-h-[70vh] w-full object-contain" />
+                  ) : null}
+                </div>
+                <div className="p-6 md:p-8 space-y-3">
+                  {lightbox.type === "leader" ? (
+                    <>
+                      <div className="overline text-[#D4A93A]">{lightbox.role}</div>
+                      <DialogTitle className="font-heading text-4xl leading-tight" data-testid="lightbox-title">{lightbox.name}</DialogTitle>
+                      <DialogDescription className="text-white/60 text-sm">
+                        Dreampick Private Limited leadership team member.
+                      </DialogDescription>
+                    </>
+                  ) : (
+                    <>
+                      <div className="overline text-[#D4A93A]">License · Slot {lightbox.index}</div>
+                      <DialogTitle className="font-heading text-3xl leading-tight" data-testid="lightbox-title">
+                        {lightbox.media?.title || `License ${lightbox.index}`}
+                      </DialogTitle>
+                      <DialogDescription className="text-white/60 text-sm">
+                        {lightbox.media?.description || "Official document"}
+                      </DialogDescription>
+                      <div className="grid grid-cols-2 gap-3 pt-3 text-xs">
+                        <div className="dp-card p-3">
+                          <div className="overline text-white/40 mb-1">Issue Date</div>
+                          <div className="text-white/85">{lightbox.media?.issue_date || "—"}</div>
+                        </div>
+                        <div className="dp-card p-3">
+                          <div className="overline text-white/40 mb-1">Expiry Date</div>
+                          <div className="text-white/85">{lightbox.media?.expiry_date || "—"}</div>
+                        </div>
+                      </div>
+                      {lightbox.media?.media_type !== "pdf" && lightbox.media?.url && (
+                        <a href={`${BACKEND}${lightbox.media.url}`} download className="inline-block pt-2">
+                          <Button className="btn-primary" data-testid="lightbox-download-img"><Download className="w-4 h-4 mr-2" /> Download image</Button>
+                        </a>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <footer className="border-t border-[#D4A93A]/15 py-8 text-center text-white/40 text-xs">
         <div className="brand-logo text-lg text-white mb-1"><span className="gold-text">Dreampick</span> Private Limited</div>

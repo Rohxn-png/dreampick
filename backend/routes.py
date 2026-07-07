@@ -23,6 +23,7 @@ from db import (
     audit_logs, system_settings, next_sequence,
     cashback_schedule, notifications, media_assets,
     password_reset_tokens, payout_receipts, bank_reveal_sessions,
+    counters,
 )
 import tree_service
 import crypto_util
@@ -1143,6 +1144,92 @@ async def admin_update_settings(payload: SettingsUpdate, request: Request, admin
     return {"success": True, "changes": changes}
 
 
+# --- Production data reset (destructive; wipes all customer data, preserves admin + settings + media) ---
+class ResetProductionDataRequest(BaseModel):
+    confirm: str
+    preserve_media: bool = True
+
+
+@admin_router.post("/reset-production-data")
+async def admin_reset_production_data(payload: ResetProductionDataRequest, request: Request, admin: dict = Depends(get_current_admin)):
+    """Wipe all customer/order/tree/commission data.  Preserves:
+    - The configured admin account (ADMIN_EMAIL from env).
+    - system_settings (commission configs, company name, GST, etc.).
+    - media_assets (unless preserve_media=false).
+    """
+    if payload.confirm != "RESET_ALL_CUSTOMER_DATA":
+        raise HTTPException(status_code=400, detail="Confirmation phrase mismatch. Send confirm='RESET_ALL_CUSTOMER_DATA'.")
+
+    admin_email = os.environ["ADMIN_EMAIL"].lower()
+    keep_admin = await users().find_one({"email": admin_email, "role": "ADMIN"})
+    if not keep_admin:
+        raise HTTPException(status_code=500, detail="Configured admin account not found; refusing to reset.")
+
+    # Wipe: delete everything not tied to the configured admin
+    r_users = await users().delete_many({"_id": {"$ne": keep_admin["_id"]}})
+    r_tree = await tree_nodes().delete_many({})
+    r_orders = await orders().delete_many({})
+    r_comm = await commissions().delete_many({})
+    r_cb = await cashback_schedule().delete_many({})
+    r_wt = await wallet_transactions().delete_many({})
+    r_wr = await withdrawal_requests().delete_many({})
+    r_bank = await bank_accounts().delete_many({})
+    r_notif = await notifications().delete_many({})
+    r_reveal = await bank_reveal_sessions().delete_many({})
+    r_prt = await password_reset_tokens().delete_many({})
+    r_receipts = await payout_receipts().delete_many({})
+    r_audit = await audit_logs().delete_many({})
+
+    r_media = None
+    if not payload.preserve_media:
+        r_media = await media_assets().delete_many({})
+
+    # Reset counters (user_code, order_number)
+    await counters().delete_many({})
+    _ = None  # placeholder — will be reset lazily on next call
+
+    await _log_audit(admin, "PRODUCTION_DATA_RESET", "system", "global", {
+        "preserve_media": payload.preserve_media,
+        "counts": {
+            "users_deleted": r_users.deleted_count,
+            "tree_nodes_deleted": r_tree.deleted_count,
+            "orders_deleted": r_orders.deleted_count,
+            "commissions_deleted": r_comm.deleted_count,
+            "cashback_schedule_deleted": r_cb.deleted_count,
+            "wallet_transactions_deleted": r_wt.deleted_count,
+            "withdrawal_requests_deleted": r_wr.deleted_count,
+            "bank_accounts_deleted": r_bank.deleted_count,
+            "notifications_deleted": r_notif.deleted_count,
+            "bank_reveal_sessions_deleted": r_reveal.deleted_count,
+            "password_reset_tokens_deleted": r_prt.deleted_count,
+            "payout_receipts_deleted": r_receipts.deleted_count,
+            "audit_logs_deleted": r_audit.deleted_count,
+            "media_assets_deleted": r_media.deleted_count if r_media else 0,
+        },
+    }, request=request)
+
+    return {
+        "success": True,
+        "preserved_admin_email": admin_email,
+        "counts": {
+            "users_deleted": r_users.deleted_count,
+            "tree_nodes_deleted": r_tree.deleted_count,
+            "orders_deleted": r_orders.deleted_count,
+            "commissions_deleted": r_comm.deleted_count,
+            "cashback_schedule_deleted": r_cb.deleted_count,
+            "wallet_transactions_deleted": r_wt.deleted_count,
+            "withdrawal_requests_deleted": r_wr.deleted_count,
+            "bank_accounts_deleted": r_bank.deleted_count,
+            "notifications_deleted": r_notif.deleted_count,
+            "bank_reveal_sessions_deleted": r_reveal.deleted_count,
+            "password_reset_tokens_deleted": r_prt.deleted_count,
+            "payout_receipts_deleted": r_receipts.deleted_count,
+            "audit_logs_deleted": r_audit.deleted_count,
+            "media_assets_deleted": r_media.deleted_count if r_media else 0,
+        },
+    }
+
+
 # --- Media management ---
 UPLOAD_DIR = "/app/backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -1153,7 +1240,11 @@ SINGLE_SLOT_CATEGORIES = {
     "COMPANY_LOGO", "HERO_SCOOTER", "HERO_BACKGROUND", "ABOUT_US",
     "CHIEF_GUEST_MR_FAZI", "CHIEF_GUEST_VISHAL_MEHARVADE",
     "CHIEF_GUEST_SRINIVAS", "CHIEF_GUEST_HEMANTH_KUMAR",
+    "COMPANY_MD_PHOTO", "CO_DIRECTOR_PHOTO",
+    "COMPANY_LICENSE_1", "COMPANY_LICENSE_2", "COMPANY_LICENSE_3",
+    "COMPANY_LICENSE_4", "COMPANY_LICENSE_5", "COMPANY_LICENSE_6",
 }
+LICENSE_CATEGORIES = {f"COMPANY_LICENSE_{i}" for i in range(1, 7)}
 MULTI_SLOT_CATEGORIES = {"GALLERY_IMAGE", "GALLERY_VIDEO"}
 ALL_CATEGORIES = SINGLE_SLOT_CATEGORIES | MULTI_SLOT_CATEGORIES
 
@@ -1165,16 +1256,23 @@ async def admin_upload_media(
     caption: Optional[str] = Form(None),
     display_order: int = Form(0),
     visible: bool = Form(True),
+    issue_date: Optional[str] = Form(None),
+    expiry_date: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
     file: UploadFile = File(...),
     admin: dict = Depends(get_current_admin),
 ):
     if category not in ALL_CATEGORIES:
         raise HTTPException(status_code=400, detail=f"Invalid category. Valid: {sorted(ALL_CATEGORIES)}")
     ext = os.path.splitext(file.filename or "")[1].lower()
-    if ext not in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"):
-        raise HTTPException(status_code=400, detail="Unsupported file type")
+    allowed_exts = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov")
+    if category in LICENSE_CATEGORIES:
+        allowed_exts = (".png", ".jpg", ".jpeg", ".webp", ".pdf")
+    if ext not in allowed_exts:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type. Allowed: {allowed_exts}")
     is_video = ext in (".mp4", ".webm", ".mov")
-    media_type = "video" if is_video else "image"
+    is_pdf = ext == ".pdf"
+    media_type = "video" if is_video else ("pdf" if is_pdf else "image")
 
     fid = str(uuid.uuid4())
     filename = f"{fid}{ext}"
@@ -1201,6 +1299,9 @@ async def admin_upload_media(
         "section": category.lower(),  # legacy compat
         "title": title,
         "caption": caption,
+        "description": description,
+        "issue_date": issue_date,
+        "expiry_date": expiry_date,
         "display_order": display_order,
         "visible": visible,
         "media_type": media_type,
@@ -1240,6 +1341,9 @@ async def admin_delete_media(mid: str, admin: dict = Depends(get_current_admin))
 class MediaUpdate(BaseModel):
     title: Optional[str] = None
     caption: Optional[str] = None
+    description: Optional[str] = None
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
     display_order: Optional[int] = None
     visible: Optional[bool] = None
 

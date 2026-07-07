@@ -39,6 +39,7 @@ export function PublicNav({ logoUrl }) {
     { to: "/plans", label: "Plans", tid: "nav-plans" },
     { to: "/#about-us", anchor: "about-us", label: "About Us", tid: "nav-about" },
     { to: "/#gallery", anchor: "gallery", label: "Gallery", tid: "nav-gallery" },
+    { to: "/#license", anchor: "license", label: "License", tid: "nav-license" },
   ];
 
   return (

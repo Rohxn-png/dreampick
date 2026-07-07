@@ -1,0 +1,43 @@
+{
+  "summary": "Full backend + frontend regression for Dreampick v5 (production reset, MD & Co-Director single slots, 6 License slots with PDF+metadata, live Preview panel in Admin Media Manager, /#license nav link). All 31 pytest tests PASSED including new v5 classes: TestV5LeadershipMedia (MD photo replace, Co-Director upload), TestV5LicenseMedia (image w/ metadata, PDF upload, mp4 rejection, single-slot replace, all 6 slots), TestV5AuthOnMediaAndReset (auth guards, phrase mismatch → 400) and TestV5ResetProductionDataZZZLast (seed → reset → admin re-login → zero KPIs → media preserved). Frontend Home renders License nav item, 2 large tilt Leadership cards (Suma B / Venkatesh Naik) with click-to-lightbox showing name/role and working close; License section with 6 empty tiles (‘Awaiting upload’) below Gallery. Admin Media Manager renders the LIVE PREVIEW panel at top grouped by Company / Leadership / Chief Guests / Licenses / Gallery, all new slot cards present (slot-COMPANY_MD_PHOTO, slot-CO_DIRECTOR_PHOTO, slot-COMPANY_LICENSE_1..6) with title/description/issue-date/expiry-date/file-input testids. End-to-end upload of a PNG with metadata to COMPANY_LICENSE_5 propagates to Home (license-card-5, license-title-5=‘QA Test Cert’) and its lightbox; delete cleans up. Post-reset admin dashboard renders with TOTAL CUSTOMERS=0 / ACTIVE=0 without crashing.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Home /#about-us section",
+        "issues": ["Carry-over from iteration_3: Telugu/Kannada glyph rendering in Vision/Mission has visible whitespace gaps (font issue, cosmetic)"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional cosmetic) Load a Telugu/Kannada-capable webfont for Home Vision/Mission blocks.",
+    "(Optional) Consider dropping the iteration-3 carry-over commission rounding note now that reset wipes all pre-v5 activations — new activations after reset need to be re-validated to confirm direct-referral net = ₹2,475 exactly. Not tested in this run because reset was executed at the END of the suite (no fresh activation done after)."
+  ],
+  "critical_code_review_comments": [
+    "routes.py is now 1370 lines — reset+media additions push it past the 700-line guideline. Split into modules (auth, media, admin/reset, admin/dashboard, commissions, withdrawals).",
+    "admin_reset_production_data does NOT remove uploaded files from /app/backend/uploads when preserve_media=false — only deletes docs. If preserve_media=false is ever used, disk will accumulate orphaned files.",
+    "media_serve_router.serve_media still does not validate `filename` is within UPLOAD_DIR (path traversal via ../). Restrict via regex or os.path.commonpath.",
+    "reset endpoint counters().delete_many({}) resets counter state but has a stray `_ = None  # placeholder` line that reads dead — remove.",
+    "Home.jsx TiltCard binds onMouseMove/onMouseLeave inline creating a new function per render; acceptable but consider memoization if leadership grid ever grows.",
+    "Media.jsx SlotUploader accepts .pdf only when slot.license is true, but there is no server-enforced max-page or MIME sniffing — a malicious file renamed .pdf would still be accepted (low risk since admin-only)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100% (31/31)", "frontend": "100% (all v5 flows verified)"},
+  "test_credentials": "Admin: dreampickev@gmail.com / dreampick@123 (verified). Old admin admin@dreampick.co.in continues to be rejected (401).",
+  "seed_data_creation": "Backend tests created ~4 TEST_* customers (some for register/order/activation, some for reset seed). Reset test wiped ALL customer data + all commissions/cashback/orders/wallet/withdrawals/notifications/audit-logs/tree at end of session — DB is now clean and admin-only. Uploaded and cleaned COMPANY_LOGO, COMPANY_MD_PHOTO, CO_DIRECTOR_PHOTO, COMPANY_LICENSE_1..5, ABOUT_US, GALLERY_IMAGE, CHIEF_GUEST_MR_FAZI test media. Frontend upload to COMPANY_LICENSE_5 was cleaned up via delete after verification.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "31-test regression suite at /app/backend/tests/backend_test.py — run with `-n 0` (serial) if you need the reset test class to run without racing other classes; the reset test is intentionally the last class alphabetically (TestV5ResetProductionDataZZZLast) so it runs after all others under -n 0 collection order. New testids used on Home: nav-license, home-leadership-grid, leader-card-<CAT>, leader-photo-<CAT>, leader-name-<CAT>, home-license-grid, license-empty-<1..6>, license-card-<1..6>, license-title-<1..6>, lightbox-modal, lightbox-title, lightbox-close, lightbox-view-pdf, lightbox-download-pdf, lightbox-download-img. Admin Media testids: media-preview-panel, slot-COMPANY_MD_PHOTO, slot-CO_DIRECTOR_PHOTO, slot-COMPANY_LICENSE_1..6, <CAT>-title-input, <CAT>-description-input, <CAT>-issue-date, <CAT>-expiry-date, <CAT>-file-input, <CAT>-upload-btn, preview-item-<CAT>. Reset endpoint: POST /api/admin/reset-production-data body={'confirm':'RESET_ALL_CUSTOMER_DATA','preserve_media':true}. License categories accept .png/.jpg/.jpeg/.webp/.pdf only (mp4 → 400). Media docs return metadata fields: title, description, issue_date, expiry_date, media_type ('image'|'video'|'pdf').",
+  "rca of the issue": "N/A — every v5 review-request test PASSED backend + frontend."
+}
