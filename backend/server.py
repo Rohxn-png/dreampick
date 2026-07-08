@@ -62,3 +62,13 @@ async def on_startup():
 async def on_shutdown():
     scheduler.stop()
     get_client().close()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "server:app",
+        host=os.environ.get("BACKEND_HOST", "0.0.0.0"),
+        port=int(os.environ.get("BACKEND_PORT", "8000")),
+        reload=False,
+    )
