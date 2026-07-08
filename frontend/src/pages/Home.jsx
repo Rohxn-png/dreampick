@@ -4,8 +4,7 @@ import { PublicNav } from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api, formatINR } from "@/lib/api";
-import { Zap, ArrowRight, Sparkles, Play, FileText, ExternalLink, Download, X, ShieldCheck } from "lucide-react";
-
+import { Zap, ArrowRight, Sparkles, Play, FileText, ExternalLink, Download, X, ShieldCheck, Mail, Phone } from "lucide-react";
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 
 const LEADERSHIP = [
@@ -499,10 +498,30 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      <footer className="border-t border-[#D4A93A]/15 py-8 text-center text-white/40 text-xs">
-        <div className="brand-logo text-lg text-white mb-1"><span className="gold-text">Dreampick</span> Private Limited</div>
-        © {new Date().getFullYear()} — GST {cfg.gst_number}
-      </footer>
+      <footer className="border-t border-[#D4A93A]/15 py-8 text-center text-white/40 text-xs flex flex-col items-center">
+  <div className="brand-logo text-lg text-white mb-3">
+    <span className="gold-text">Dreampick</span> Private Limited
+  </div>
+  
+  <div className="flex items-center gap-2 mb-2">
+    <Mail className="w-3.5 h-3.5" />
+    <a 
+      href="mailto:rohan11302004@gmail.com" 
+      className="hover:text-white transition-colors duration-200"
+    >
+      rohan11302004@gmail.com
+    </a>
+  </div>
+  
+  <div className="flex items-center gap-2 mb-2">
+    <Phone className="w-3.5 h-3.5" />
+    <span>For more info Contact: +91 7676244406</span>
+  </div>
+  
+  <div className="mt-2">
+    © {new Date().getFullYear()} — GST {cfg.gst_number}
+  </div>
+</footer>
     </div>
   );
 }

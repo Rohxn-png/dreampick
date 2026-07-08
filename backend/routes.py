@@ -1182,11 +1182,18 @@ async def admin_reset_production_data(payload: ResetProductionDataRequest, reque
 
     r_media = None
     if not payload.preserve_media:
+        # Clean up files from disk too
+        async for old in media_assets().find({}):
+            try:
+                fn = old.get("filename")
+                if fn:
+                    os.remove(os.path.join(UPLOAD_DIR, fn))
+            except Exception:
+                pass
         r_media = await media_assets().delete_many({})
 
     # Reset counters (user_code, order_number)
     await counters().delete_many({})
-    _ = None  # placeholder — will be reset lazily on next call
 
     await _log_audit(admin, "PRODUCTION_DATA_RESET", "system", "global", {
         "preserve_media": payload.preserve_media,
@@ -1363,7 +1370,12 @@ media_serve_router = APIRouter(prefix="/media", tags=["media"])
 @media_serve_router.get("/{filename}")
 async def serve_media(filename: str):
     from fastapi.responses import FileResponse
-    path = os.path.join(UPLOAD_DIR, filename)
+    # Guard against path traversal — allow only bare filenames with a known extension
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    path = os.path.abspath(os.path.join(UPLOAD_DIR, filename))
+    if os.path.commonpath([path, os.path.abspath(UPLOAD_DIR)]) != os.path.abspath(UPLOAD_DIR):
+        raise HTTPException(status_code=400, detail="Invalid filename")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(path)
