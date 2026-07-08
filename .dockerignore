@@ -1,0 +1,39 @@
+# Ignored by `docker build` — keeps development-only files out of the image
+# so the production bundle picks up runtime relative paths.
+
+# --- Dev / editor artifacts ---
+.git
+.gitignore
+.github
+.vscode
+.idea
+.emergent
+.DS_Store
+*.md
+!README.md
+
+# --- Environment files (must be provided at deploy time via PandaStack) ---
+.env
+.env.*
+backend/.env
+frontend/.env
+frontend/.env.*
+
+# --- Python ---
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+backend/tests
+backend/uploads
+
+# --- Node / React ---
+node_modules
+frontend/node_modules
+frontend/build
+frontend/.eslintcache
+
+# --- Testing artifacts ---
+test_reports
+memory

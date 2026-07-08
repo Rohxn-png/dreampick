@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Trash2, Upload, Image as ImageIcon, FileText, ExternalLink } from "lucide-react";
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const BACKEND = process.env.REACT_APP_BACKEND_URL || "";
 
 const CORE_SINGLE_SLOTS = [
   { cat: "COMPANY_LOGO", label: "Company Logo", desc: "Shown in navbar and login screen" },

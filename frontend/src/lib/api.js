@@ -1,7 +1,15 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+/**
+ * Base URL strategy:
+ * - If REACT_APP_BACKEND_URL is set at build time (e.g., during local dev / preview),
+ *   the frontend calls that host directly.
+ * - If it's empty/unset (default for Docker/PandaStack production build), we use
+ *   relative paths, so all `/api/*` requests hit the same origin that served the site.
+ */
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 export const API_BASE = `${BACKEND_URL}/api`;
+export const MEDIA_BASE = BACKEND_URL; // media URLs from the backend already start with /api/media/
 
 export const api = axios.create({
   baseURL: API_BASE,

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api, formatINR } from "@/lib/api";
 import { Zap, ArrowRight, Sparkles, Play, FileText, ExternalLink, Download, X, ShieldCheck, Mail, Phone } from "lucide-react";
-const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const BACKEND = process.env.REACT_APP_BACKEND_URL || "";
 
 const LEADERSHIP = [
   { role: "Managing Director", name: "Suma B", category: "COMPANY_MD_PHOTO", initial: "S" },
