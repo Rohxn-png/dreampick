@@ -35,7 +35,8 @@ export default function AdminUsers() {
     } catch (e) { toast.error(formatApiError(e)); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status, role]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status, role]);
 
   const openDetail = async (u) => {
     setSelected(u);

@@ -21,7 +21,8 @@ export default function AdminWithdrawals() {
     } catch (e) { toast.error(formatApiError(e)); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status]);
 
   const doAction = async (id, action) => {
     if (!window.confirm(`Are you sure you want to ${action} this withdrawal?`)) return;

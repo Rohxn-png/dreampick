@@ -19,7 +19,8 @@ export function CommissionListPage({ commissionType, label }) {
       setRows(data.commissions || []);
     } catch (e) { toast.error(formatApiError(e)); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [commissionType]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [commissionType]);
 
   const doAction = async (id, action) => {
     if (!window.confirm(`Confirm: ${action}?`)) return;

@@ -33,7 +33,8 @@ export default function AdminUserDetail() {
     try { const { data } = await api.get(`/admin/users/${user_id}`); setD(data); }
     catch (e) { toast.error(formatApiError(e)); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user_id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [user_id]);
 
   const openReveal = (bankId) => {
     setRevealBankId(bankId);

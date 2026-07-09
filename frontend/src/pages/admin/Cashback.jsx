@@ -22,7 +22,8 @@ export default function AdminCashback() {
       setRows(data.cashback_schedule || []);
     } catch (e) { toast.error(formatApiError(e)); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status]);
 
   const doAction = async (id, action) => {
     if (!window.confirm(`Confirm: ${action}?`)) return;

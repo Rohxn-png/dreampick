@@ -22,7 +22,8 @@ export default function AdminOrders() {
       setRows(data.orders || []);
     } catch (e) { toast.error(formatApiError(e)); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status]);
 
   const activate = async (id) => {
     if (!window.confirm("Confirm activation? This will place user in tree, create cashback schedule, and generate commissions.")) return;

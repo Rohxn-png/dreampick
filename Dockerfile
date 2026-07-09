@@ -7,7 +7,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    NODE_ENV=production \
     BACKEND_HOST=0.0.0.0 \
     BACKEND_PORT=8000
 
@@ -39,8 +38,9 @@ RUN yarn install --frozen-lockfile
 
 # Copy the rest of the frontend source
 COPY frontend/ .
-# Build the project using yarn
-RUN yarn build
+# Build the project using yarn. CI=false so eslint warnings don't fail the build
+# in headless environments (CRA sets CI=true by default when no TTY).
+RUN CI=false yarn build
 
 # ---------- Supervisor config ----------
 WORKDIR /app

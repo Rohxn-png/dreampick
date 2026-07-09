@@ -1,6 +1,8 @@
 // craco.config.js
 const path = require("path");
-require("dotenv").config();
+// NOTE: CRA/craco already load `.env` files natively at build time (via dotenv-webpack).
+// We intentionally do NOT `require("dotenv")` here — it's a devDependency and is not
+// installed when Docker builds with NODE_ENV=production.
 
 // Check if we're in development/preview mode (not production build)
 // Craco sets NODE_ENV=development for start, NODE_ENV=production for build
