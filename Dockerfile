@@ -31,17 +31,20 @@ WORKDIR /app
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# ---------- Frontend Build (Forced Cache Bust) ----------
+# ---------- Frontend Build ----------
 WORKDIR /app/frontend
 # Adding an ARG forces Docker to ignore cache for all steps below this
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 COPY frontend/package.json frontend/yarn.lock* ./
-RUN yarn install --frozen-lockfile
+
+# Install ALL dependencies (including devDependencies) so build tools are found
+RUN yarn install --frozen-lockfile --production=false
 
 # Copy the rest of the frontend source
 COPY frontend/ .
-# Build the project
-RUN yarn build
+
+# Build the project with OpenSSL legacy provider to fix build errors
+RUN NODE_OPTIONS=--openssl-legacy-provider yarn build
 
 # ---------- Supervisor config ----------
 WORKDIR /app
