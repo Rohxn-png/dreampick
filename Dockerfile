@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     BACKEND_HOST=0.0.0.0 \
     BACKEND_PORT=8000
 
-# ---------- Install Node.js, npm, and build tools ----------
+# ---------- Install Node.js, Yarn, and build tools ----------
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         curl ca-certificates gnupg build-essential supervisor \
@@ -31,15 +31,16 @@ WORKDIR /app
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# ---------- Frontend Build ----------
+# ---------- Frontend Build (Forced Cache Bust) ----------
 WORKDIR /app/frontend
-# Copy package files and install using Yarn
+# Adding an ARG forces Docker to ignore cache for all steps below this
+ARG CACHEBUST=2
 COPY frontend/package.json frontend/yarn.lock* ./
 RUN yarn install --frozen-lockfile
 
 # Copy the rest of the frontend source
 COPY frontend/ .
-# Build the project using yarn
+# Build the project
 RUN yarn build
 
 # ---------- Supervisor config ----------
